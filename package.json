@@ -28,6 +28,7 @@
     "build": "tsup src/index.ts src/lib.ts --format esm,cjs --dts --clean",
     "docs:api-reference": "rm -rf docs/content/sdk-reference && typedoc --options typedoc.json",
     "dev": "tsx src/index.ts",
+    "test:e2e:local": "bash test/e2e/run-local.sh",
     "typecheck": "tsc --noEmit"
   },
   "engines": {

@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: traduora-test-postgres
+    environment:
+      POSTGRES_DB: traduora
+      POSTGRES_USER: traduora
+      POSTGRES_PASSWORD: traduora
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U traduora -d traduora"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - traduora-test-postgres:/var/lib/postgresql/data
+
+  traduora:
+    image: everco/ever-traduora:latest
+    container_name: traduora-test-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TR_DB_TYPE: postgres
+      TR_DB_HOST: postgres
+      TR_DB_PORT: 5432
+      TR_DB_USER: traduora
+      TR_DB_PASSWORD: traduora
+      TR_DB_DATABASE: traduora
+      TR_DB_AUTOMIGRATE: "true"
+      TR_APP_ORIGIN: http://localhost:4100
+      TR_APP_URL: http://localhost:4100
+    ports:
+      - "4100:8080"
+
+volumes:
+  traduora-test-postgres:
