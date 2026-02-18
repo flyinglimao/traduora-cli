@@ -47,6 +47,18 @@ const { createApi } = require("traduora-cli-next");
 - `client`: low-level authenticated HTTP client (`TraduoraClient`).
 - `api`: high-level wrapper (`TraduoraApi`).
 
+## Full generated TypeScript reference
+
+For complete, symbol-by-symbol API docs (classes, interfaces, type aliases, functions), open:
+
+- [SDK TypeScript Reference](./sdk-reference)
+
+This reference is generated from source code with TypeDoc:
+
+```bash
+pnpm docs:api-reference
+```
+
 ## API reference (`TraduoraApi`)
 
 Source of truth: `/Users/flyinglimao/Code/traduora-cli/src/api.ts`

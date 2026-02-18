@@ -4,7 +4,7 @@ import { resolveConfig, type ResolveConfigOptions } from "./config.js";
 import type { ResolvedConfig } from "./types.js";
 
 export { TraduoraApi } from "./api.js";
-export { requestAccessToken } from "./auth.js";
+export { requestAccessToken, type CachedToken } from "./auth.js";
 export { TraduoraClient } from "./client.js";
 export {
   DEFAULT_CONFIG_CANDIDATES,

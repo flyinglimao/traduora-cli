@@ -47,6 +47,18 @@ const { createApi } = require("traduora-cli-next");
 - `client`：底层认证 HTTP client（`TraduoraClient`）。
 - `api`：高层封装（`TraduoraApi`）。
 
+## 完整自动生成 TypeScript Reference
+
+如果你要查看完整符号级 API（class / interface / type alias / function），请看：
+
+- [SDK TypeScript Reference](./sdk-reference)
+
+该参考文档由 TypeDoc 从源码生成：
+
+```bash
+pnpm docs:api-reference
+```
+
 ## API 参考（`TraduoraApi`）
 
 实现来源：`/Users/flyinglimao/Code/traduora-cli/src/api.ts`

@@ -25,3 +25,11 @@ This site supports:
 - Traditional Chinese (`zh-Hant`)
 - Simplified Chinese (`zh-Hans`)
 - Japanese (`ja`)
+
+## Regenerate SDK TypeScript Reference
+
+From repository root:
+
+```bash
+pnpm docs:api-reference
+```

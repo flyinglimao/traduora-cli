@@ -1,0 +1,13 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/lib.ts"],
+  "entryFileName": "index",
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "docs/content/sdk-reference",
+  "readme": "none",
+  "hideGenerator": true,
+  "githubPages": false,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "sort": ["source-order"]
+}

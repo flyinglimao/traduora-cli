@@ -47,6 +47,18 @@ const { createApi } = require("traduora-cli-next");
 - `client`: 低レベル認証 HTTP クライアント（`TraduoraClient`）。
 - `api`: 高レベル API ラッパー（`TraduoraApi`）。
 
+## 自動生成される完全 TypeScript Reference
+
+クラス・インターフェース・型エイリアス・関数を含む完全な API リファレンスは以下を参照してください。
+
+- [SDK TypeScript Reference](./sdk-reference)
+
+このリファレンスは TypeDoc でソースコードから生成されます。
+
+```bash
+pnpm docs:api-reference
+```
+
 ## API リファレンス（`TraduoraApi`）
 
 実装ソース：`/Users/flyinglimao/Code/traduora-cli/src/api.ts`
