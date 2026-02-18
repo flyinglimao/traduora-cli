@@ -1,8 +1,8 @@
-[**traduora-cli-next**](../index.md)
+[**@0xlimao/traduora-cli**](../index.md)
 
 ***
 
-[traduora-cli-next](../index.md) / DEFAULT\_WRITABLE\_CONFIG\_PATH
+[@0xlimao/traduora-cli](../index.md) / DEFAULT\_WRITABLE\_CONFIG\_PATH
 
 # Variable: DEFAULT\_WRITABLE\_CONFIG\_PATH
 

@@ -1,8 +1,8 @@
-[**traduora-cli-next**](../index.md)
+[**@0xlimao/traduora-cli**](../index.md)
 
 ***
 
-[traduora-cli-next](../index.md) / DataResponse
+[@0xlimao/traduora-cli](../index.md) / DataResponse
 
 # Interface: DataResponse\<T\>
 

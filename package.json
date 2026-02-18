@@ -1,5 +1,5 @@
 {
-  "name": "traduora-cli-next",
+  "name": "@0xlimao/traduora-cli",
   "version": "0.1.0",
   "description": "Modern Traduora CLI with TypeScript and client_credentials support",
   "type": "module",
@@ -21,6 +21,9 @@
   "bin": {
     "traduora": "dist/index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist"
   ],
@@ -32,7 +35,7 @@
     "typecheck": "tsc --noEmit"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "keywords": [
     "traduora",
@@ -40,6 +43,14 @@
     "i18n"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flyinglimao/traduora-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/flyinglimao/traduora-cli/issues"
+  },
+  "homepage": "https://flyinglimao.github.io/traduora-cli/",
   "dependencies": {
     "commander": "^14.0.1",
     "dotenv": "^17.2.3",

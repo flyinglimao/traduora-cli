@@ -1,5 +1,5 @@
 {
-  "name": "traduora-cli-next-docs",
+  "name": "traduora-cli-docs",
   "private": true,
   "scripts": {
     "start": "docusaurus start",

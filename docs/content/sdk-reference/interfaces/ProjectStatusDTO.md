@@ -1,8 +1,8 @@
-[**traduora-cli-next**](../index.md)
+[**@0xlimao/traduora-cli**](../index.md)
 
 ***
 
-[traduora-cli-next](../index.md) / ProjectStatusDTO
+[@0xlimao/traduora-cli](../index.md) / ProjectStatusDTO
 
 # Interface: ProjectStatusDTO
 

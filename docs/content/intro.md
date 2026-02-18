@@ -6,7 +6,7 @@ slug: /
 
 # Traduora CLI Next
 
-`traduora-cli-next` is a practical command-line tool and JS SDK for operating Traduora projects.
+`@0xlimao/traduora-cli` is a practical command-line tool and JS SDK for operating Traduora projects.
 
 ## What this tool is for
 

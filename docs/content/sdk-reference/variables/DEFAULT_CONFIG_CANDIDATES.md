@@ -1,8 +1,8 @@
-[**traduora-cli-next**](../index.md)
+[**@0xlimao/traduora-cli**](../index.md)
 
 ***
 
-[traduora-cli-next](../index.md) / DEFAULT\_CONFIG\_CANDIDATES
+[@0xlimao/traduora-cli](../index.md) / DEFAULT\_CONFIG\_CANDIDATES
 
 # Variable: DEFAULT\_CONFIG\_CANDIDATES
 

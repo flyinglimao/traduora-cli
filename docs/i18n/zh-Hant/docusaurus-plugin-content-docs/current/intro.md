@@ -6,7 +6,7 @@ slug: /
 
 # Traduora CLI Next
 
-`traduora-cli-next` 是一個可實際落地在開發流程中的 Traduora CLI 與 JS SDK。
+`@0xlimao/traduora-cli` 是一個可實際落地在開發流程中的 Traduora CLI 與 JS SDK。
 
 ## 這個工具可以解決什麼
 

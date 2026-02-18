@@ -1,8 +1,8 @@
-**traduora-cli-next**
+**@0xlimao/traduora-cli**
 
 ***
 
-# traduora-cli-next
+# @0xlimao/traduora-cli
 
 ## Classes
 

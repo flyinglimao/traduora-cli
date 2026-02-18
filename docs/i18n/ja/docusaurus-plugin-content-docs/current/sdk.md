@@ -8,7 +8,7 @@ CLI だけで足りない処理は SDK でスクリプト化できます。
 ## 例 1: API client を初期化する
 
 ```js
-import { createApi } from "traduora-cli-next";
+import { createApi } from "@0xlimao/traduora-cli";
 
 const { api } = await createApi({
   overrides: {
@@ -30,7 +30,7 @@ console.log(projects.map((p) => ({ id: p.id, name: p.name })));
 `updateTranslation` は `termId` が必要なので、先に key -> ID を解決します。
 
 ```js
-import { createApi } from "traduora-cli-next";
+import { createApi } from "@0xlimao/traduora-cli";
 
 const { api } = await createApi();
 const projectId = "<project-id>";
@@ -50,7 +50,7 @@ console.log("translation updated");
 
 ```js
 import { writeFile } from "node:fs/promises";
-import { createApi } from "traduora-cli-next";
+import { createApi } from "@0xlimao/traduora-cli";
 
 const { api } = await createApi();
 const projectId = "<project-id>";

@@ -1,8 +1,8 @@
-[**traduora-cli-next**](../index.md)
+[**@0xlimao/traduora-cli**](../index.md)
 
 ***
 
-[traduora-cli-next](../index.md) / LocaleDTO
+[@0xlimao/traduora-cli](../index.md) / LocaleDTO
 
 # Interface: LocaleDTO
 

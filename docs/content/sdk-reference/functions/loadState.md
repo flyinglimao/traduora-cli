@@ -1,8 +1,8 @@
-[**traduora-cli-next**](../index.md)
+[**@0xlimao/traduora-cli**](../index.md)
 
 ***
 
-[traduora-cli-next](../index.md) / loadState
+[@0xlimao/traduora-cli](../index.md) / loadState
 
 # Function: loadState()
 

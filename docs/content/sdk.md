@@ -8,7 +8,7 @@ Use SDK scripts when you need programmable workflows beyond CLI commands.
 ## Example 1: Initialize API client
 
 ```js
-import { createApi } from "traduora-cli-next";
+import { createApi } from "@0xlimao/traduora-cli";
 
 const { api } = await createApi({
   overrides: {
@@ -30,7 +30,7 @@ console.log(projects.map((p) => ({ id: p.id, name: p.name })));
 `updateTranslation` needs `termId`, so resolve key -> ID first.
 
 ```js
-import { createApi } from "traduora-cli-next";
+import { createApi } from "@0xlimao/traduora-cli";
 
 const { api } = await createApi();
 const projectId = "<project-id>";
@@ -50,7 +50,7 @@ console.log("translation updated");
 
 ```js
 import { writeFile } from "node:fs/promises";
-import { createApi } from "traduora-cli-next";
+import { createApi } from "@0xlimao/traduora-cli";
 
 const { api } = await createApi();
 const projectId = "<project-id>";

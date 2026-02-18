@@ -1,8 +1,8 @@
-[**traduora-cli-next**](../index.md)
+[**@0xlimao/traduora-cli**](../index.md)
 
 ***
 
-[traduora-cli-next](../index.md) / saveState
+[@0xlimao/traduora-cli](../index.md) / saveState
 
 # Function: saveState()
 
