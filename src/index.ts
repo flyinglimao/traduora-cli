@@ -7,8 +7,9 @@ import { requestAccessToken } from "./auth.js";
 import { TraduoraClient } from "./client.js";
 import { resolveConfig } from "./config.js";
 import { runInit } from "./init.js";
-import { closePromptInterface } from "./prompts.js";
+import { askText, closePromptInterface } from "./prompts.js";
 import { loadState, updateState } from "./state.js";
+import { createUserApi } from "./user-login.js";
 import type {
   CliState,
   ExportFormat,
@@ -51,6 +52,12 @@ interface ProjectOption {
 
 interface LocaleOption {
   locale?: string;
+}
+
+interface ProjectAuthOption {
+  user?: string;
+  password?: string;
+  persistent?: boolean;
 }
 
 function collect(value: string, previous: string[]): string[] {
@@ -128,6 +135,59 @@ async function loadRuntime(global: GlobalOptions): Promise<{
   const client = new TraduoraClient(config);
   const api = new TraduoraApi(client);
   return { config, state, api };
+}
+
+async function loadProjectRuntime(
+  global: GlobalOptions,
+  auth: ProjectAuthOption
+): Promise<{
+  api: TraduoraApi;
+  state: CliState;
+}> {
+  const config = await resolveConfig({
+    configPath: global.config,
+    overrides: resolveOverrides(global),
+  });
+  const state = await loadState(global.state);
+  const api = await createUserApi({
+    baseUrl: config.baseUrl,
+    username: auth.user,
+    password: auth.password,
+    persistent: auth.persistent,
+  });
+
+  return { api, state };
+}
+
+async function pickProjectId(
+  api: TraduoraApi,
+  state: CliState,
+  explicitProjectId: string | undefined,
+  action: string
+): Promise<string> {
+  const projects = await api.listProjects();
+  if (projects.length === 0) {
+    throw new Error("No project found for this account.");
+  }
+
+  if (explicitProjectId) {
+    const exists = projects.some((project) => project.id === explicitProjectId);
+    if (!exists) {
+      throw new Error(`Project not found in your account: ${explicitProjectId}`);
+    }
+    return explicitProjectId;
+  }
+
+  printProjects(projects, state.currentProjectId);
+  const picked = await askText(`Pick project id to ${action}`, {
+    defaultValue: state.currentProjectId ?? projects[0]?.id,
+  });
+  const exists = projects.some((project) => project.id === picked);
+  if (!exists) {
+    throw new Error(`Project not found in your account: ${picked}`);
+  }
+
+  return picked;
 }
 
 async function findTermByValue(
@@ -238,10 +298,16 @@ async function main(): Promise<void> {
     .command("add")
     .argument("<name>", "project name")
     .option("--description <description>", "project description")
+    .option("--user <email>", "account email for project login flow")
+    .option("--password <password>", "account password for project login flow")
+    .option(
+      "--persistent",
+      "persist account credentials to .traduora.user.json and add it to .gitignore"
+    )
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
-    .action(async (name: string, options: { description?: string } & LabelOption) => {
+    .action(async (name: string, options: { description?: string } & LabelOption & ProjectAuthOption) => {
       const global = program.opts<GlobalOptions>();
-      const { api } = await loadRuntime(global);
+      const { api } = await loadProjectRuntime(global, options);
       const created = await api.createProject({ name, description: options.description });
       const labels = parseLabels(options.label);
       if (labels.length > 0) {
@@ -252,47 +318,72 @@ async function main(): Promise<void> {
 
   project
     .command("list")
-    .action(async () => {
+    .option("--user <email>", "account email for project login flow")
+    .option("--password <password>", "account password for project login flow")
+    .option(
+      "--persistent",
+      "persist account credentials to .traduora.user.json and add it to .gitignore"
+    )
+    .action(async (options: ProjectAuthOption) => {
       const global = program.opts<GlobalOptions>();
-      const { api, state } = await loadRuntime(global);
+      const { api, state } = await loadProjectRuntime(global, options);
       const projects = await api.listProjects();
       printProjects(projects, state.currentProjectId);
     });
 
   project
     .command("update")
-    .argument("<id>", "project id")
+    .argument("[id]", "project id (optional, choose interactively when omitted)")
     .option("--name <name>", "new project name")
     .option("--description <description>", "new project description")
+    .option("--user <email>", "account email for project login flow")
+    .option("--password <password>", "account password for project login flow")
+    .option(
+      "--persistent",
+      "persist account credentials to .traduora.user.json and add it to .gitignore"
+    )
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
-    .action(async (id: string, options: { name?: string; description?: string } & LabelOption) => {
+    .action(
+      async (
+        id: string | undefined,
+        options: { name?: string; description?: string } & LabelOption & ProjectAuthOption
+      ) => {
       const global = program.opts<GlobalOptions>();
-      const { api } = await loadRuntime(global);
+      const { api, state } = await loadProjectRuntime(global, options);
+      const projectId = await pickProjectId(api, state, id, "update");
 
       const hasProjectChange = options.name !== undefined || options.description !== undefined;
       const updated = hasProjectChange
-        ? await api.updateProject(id, {
+        ? await api.updateProject(projectId, {
             name: options.name,
             description: options.description,
           })
-        : await api.getProject(id);
+        : await api.getProject(projectId);
 
       const labels = parseLabels(options.label);
       if (labels.length > 0) {
-        await api.ensureLabels(id, labels);
+        await api.ensureLabels(projectId, labels);
       }
 
       printJson({ project: updated, labelsCreatedOrEnsured: labels });
-    });
+      }
+    );
 
   project
     .command("remove")
-    .argument("<id>", "project id")
-    .action(async (id: string) => {
+    .argument("[id]", "project id (optional, choose interactively when omitted)")
+    .option("--user <email>", "account email for project login flow")
+    .option("--password <password>", "account password for project login flow")
+    .option(
+      "--persistent",
+      "persist account credentials to .traduora.user.json and add it to .gitignore"
+    )
+    .action(async (id: string | undefined, options: ProjectAuthOption) => {
       const global = program.opts<GlobalOptions>();
-      const { api } = await loadRuntime(global);
-      await api.deleteProject(id);
-      printJson({ removed: id });
+      const { api, state } = await loadProjectRuntime(global, options);
+      const projectId = await pickProjectId(api, state, id, "remove");
+      await api.deleteProject(projectId);
+      printJson({ removed: projectId });
     });
 
   project
@@ -308,17 +399,25 @@ async function main(): Promise<void> {
 
   project
     .command("use")
-    .argument("<id>", "project id")
-    .action(async (id: string) => {
+    .argument("[id]", "project id (optional, choose interactively when omitted)")
+    .option("--user <email>", "account email for project login flow")
+    .option("--password <password>", "account password for project login flow")
+    .option(
+      "--persistent",
+      "persist account credentials to .traduora.user.json and add it to .gitignore"
+    )
+    .action(async (id: string | undefined, options: ProjectAuthOption) => {
       const global = program.opts<GlobalOptions>();
+      const { api, state } = await loadProjectRuntime(global, options);
+      const projectId = await pickProjectId(api, state, id, "use");
       await updateState(
         (current) => ({
           ...current,
-          currentProjectId: id,
+          currentProjectId: projectId,
         }),
         global.state
       );
-      printJson({ currentProjectId: id });
+      printJson({ currentProjectId: projectId });
     });
 
   const term = program.command("term").description("term operations");

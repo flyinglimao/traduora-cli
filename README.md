@@ -105,6 +105,17 @@ traduora project status --help
 traduora project use --help
 ```
 
+`project` commands except `project status` now use account login flow.  
+You can provide credentials in flags (`--user`, `--password`) or run interactively.
+
+To persist account credentials for future `project` commands:
+
+```bash
+traduora project list --persistent
+```
+
+This writes `.traduora.user.json` and auto-adds it to `.gitignore`.
+
 ### Term
 
 ```bash

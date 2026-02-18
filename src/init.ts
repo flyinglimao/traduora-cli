@@ -5,7 +5,7 @@ import { requestAccessToken } from "./auth.js";
 import { TraduoraApi } from "./api.js";
 import { TraduoraClient } from "./client.js";
 import { DEFAULT_WRITABLE_CONFIG_PATH, normalizeBaseUrl } from "./config.js";
-import { askChoice, askText } from "./prompts.js";
+import { askChoice, askConfirm, askText } from "./prompts.js";
 import { updateState } from "./state.js";
 import type { PersistedConfig, ProjectRole } from "./types.js";
 
@@ -57,7 +57,7 @@ async function initWithLogin(
   configPath: string,
   role: ProjectRole,
   statePath?: string
-): Promise<{ savedPath: string; projectId: string }> {
+): Promise<{ savedPath: string; projectId: string; defaultProjectId?: string }> {
   const username = await askText("Account email");
   const password = await askText("Account password");
 
@@ -124,18 +124,62 @@ async function initWithLogin(
   };
 
   const savedPath = await writeConfigFile(configPath, config);
-  await updateState(
-    (current) => ({
-      ...current,
-      currentProjectId: projectId,
-    }),
-    statePath
-  );
+  let defaultProjectId: string | undefined;
+  const shouldSetDefault = await askConfirm("Set selected project as default for CLI state", true);
+  if (shouldSetDefault) {
+    await updateState(
+      (current) => ({
+        ...current,
+        currentProjectId: projectId,
+      }),
+      statePath
+    );
+    defaultProjectId = projectId;
+  }
 
   return {
     savedPath,
     projectId,
+    defaultProjectId,
   };
+}
+
+async function pickProjectViaAccountLogin(baseUrl: string): Promise<string> {
+  const username = await askText("Account email");
+  const password = await askText("Account password");
+  const userToken = await requestAccessToken({
+    baseUrl,
+    auth: {
+      grantType: "password",
+      username,
+      password,
+    },
+  });
+
+  const userClient = new TraduoraClient({
+    baseUrl,
+    accessToken: userToken.accessToken,
+  });
+  const userApi = new TraduoraApi(userClient);
+  const projects = await userApi.listProjects();
+  if (projects.length === 0) {
+    throw new Error("No project found in this account.");
+  }
+
+  console.log("Available projects:");
+  for (const project of projects) {
+    console.log(`  ${project.id}  ${project.name}`);
+  }
+
+  const projectId = await askText("Pick project id", {
+    defaultValue: projects[0]?.id,
+  });
+  const exists = projects.some((project) => project.id === projectId);
+  if (!exists) {
+    throw new Error(`Project not found in your account: ${projectId}`);
+  }
+
+  return projectId;
 }
 
 export async function runInit(options: InitOptions): Promise<void> {
@@ -155,10 +199,30 @@ export async function runInit(options: InitOptions): Promise<void> {
   if (mode === "1") {
     const savedPath = await initWithCredentials(baseUrl, configPath);
     console.log(`Config saved: ${savedPath}`);
+    const shouldSetDefault = await askConfirm(
+      "Set default project now (requires account login)",
+      false
+    );
+    if (shouldSetDefault) {
+      const projectId = await pickProjectViaAccountLogin(baseUrl);
+      await updateState(
+        (current) => ({
+          ...current,
+          currentProjectId: projectId,
+        }),
+        options.statePath
+      );
+      console.log(`Default project set: ${projectId}`);
+    }
     return;
   }
 
   const result = await initWithLogin(baseUrl, configPath, options.role, options.statePath);
   console.log(`Config saved: ${result.savedPath}`);
-  console.log(`Default project set: ${result.projectId}`);
+  console.log(`Project selected for generated client: ${result.projectId}`);
+  if (result.defaultProjectId) {
+    console.log(`Default project set: ${result.defaultProjectId}`);
+  } else {
+    console.log("Default project: skipped");
+  }
 }

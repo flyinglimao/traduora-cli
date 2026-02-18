@@ -36,7 +36,16 @@ You provide account email/password:
 2. CLI asks which project to use.
 3. CLI creates project client with role (`editor` by default).
 4. CLI validates generated client credentials.
-5. CLI writes config and default project state.
+5. CLI writes config.
+6. CLI asks whether to set default project in state (can be skipped).
+
+## Default project setup prompt
+
+After config is saved, `init` asks whether you want to set a default project.
+
+- You can skip this step.
+- If you continue, the CLI asks for account login and lets you pick a project.
+- The selected project is written to state (`.traduora.state.json` by default).
 
 ## Parameters
 
