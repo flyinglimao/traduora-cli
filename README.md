@@ -45,12 +45,20 @@ const { createApi } = require("traduora-cli-next");
 
 ## 文件站（GitHub Pages）
 
-專案已提供 `/docs` 文件資料夾，可直接設定為 GitHub Pages 來源。
+專案已提供 `/docs` 的 Docusaurus 站點，可直接設定為 GitHub Pages 來源，並支援多語系：
 
-- 首頁：`/Users/flyinglimao/Code/traduora-cli/docs/index.md`
-- 快速開始：`/Users/flyinglimao/Code/traduora-cli/docs/getting-started.md`
-- CLI：`/Users/flyinglimao/Code/traduora-cli/docs/cli.md`
-- SDK：`/Users/flyinglimao/Code/traduora-cli/docs/sdk.md`
+- `en`（English）
+- `zh-Hant`（繁體中文）
+- `zh-Hans`（简体中文）
+- `ja`（日本語）
+
+本機啟動文件站：
+
+```bash
+cd /Users/flyinglimao/Code/traduora-cli/docs
+pnpm install
+pnpm start
+```
 
 ## 設定來源
 

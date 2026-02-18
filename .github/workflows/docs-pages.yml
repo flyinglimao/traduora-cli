@@ -29,19 +29,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install docs dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: docs
+
+      - name: Build docs
+        run: pnpm build
+        working-directory: docs
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: docs
-          destination: ./_site
 
       - name: Upload docs artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./_site
+          path: docs/build
 
       - name: Deploy to GitHub Pages
         id: deployment

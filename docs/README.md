@@ -1,20 +1,27 @@
-# Docs Deployment (GitHub Pages)
+# Docusaurus Docs
 
-此專案文件放在 `docs/`，可直接用 GitHub Pages 佈署。
+## Local Development
 
-## 方式一：GitHub Pages（建議）
+```bash
+cd docs
+nvm use 22
+pnpm install
+pnpm start
+```
 
-1. 到 GitHub repository settings
-2. 開啟 `Pages`
-3. `Build and deployment` 選 `Deploy from a branch`
-4. Branch 選 `main`（或你的預設分支）
-5. Folder 選 `/docs`
+## Build
 
-完成後 Pages 會把 `docs/` 內容作為文件站來源。
+```bash
+pnpm build
+```
 
-## 文件入口
+Build output: `docs/build/`
 
-- `index.md`
-- `getting-started.md`
-- `cli.md`
-- `sdk.md`
+## Languages
+
+This site supports:
+
+- English (`en`)
+- Traditional Chinese (`zh-Hant`)
+- Simplified Chinese (`zh-Hans`)
+- Japanese (`ja`)
