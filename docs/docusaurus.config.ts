@@ -2,11 +2,11 @@ import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
-  title: "Traduora CLI Next",
+  title: "Traduora CLI",
   tagline: "CLI + JS SDK for Traduora",
   favicon: "img/logo.svg",
-  url: "https://example.com",
-  baseUrl: "/",
+  url: "https://flyinglimao.github.io",
+  baseUrl: "/traduora-cli/",
   organizationName: "flyinglimao",
   projectName: "traduora-cli",
   onBrokenLinks: "throw",
@@ -44,9 +44,9 @@ const config: Config = {
   ],
   themeConfig: {
     navbar: {
-      title: "Traduora CLI Next",
+      title: "Traduora CLI",
       logo: {
-        alt: "Traduora CLI Next",
+        alt: "Traduora CLI",
         src: "img/logo.svg",
       },
       items: [
@@ -61,7 +61,7 @@ const config: Config = {
           position: "right",
         },
         {
-          href: "https://github.com/ever-co/ever-traduora",
+          href: "https://github.com/flyinglimao/traduora-cli",
           label: "GitHub",
           position: "right",
         },
@@ -88,7 +88,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Traduora CLI Next`,
+      copyright: `Copyright © ${new Date().getFullYear()} Traduora CLI`,
     },
   } satisfies Preset.ThemeConfig,
 };
