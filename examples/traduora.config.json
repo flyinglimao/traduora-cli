@@ -1,0 +1,8 @@
+{
+  "baseUrl": "https://app.traduora.co",
+  "auth": {
+    "grantType": "client_credentials",
+    "clientId": "replace-me",
+    "clientSecret": "replace-me"
+  }
+}
