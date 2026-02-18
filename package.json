@@ -1,0 +1,52 @@
+{
+  "name": "traduora-cli-next",
+  "version": "0.1.0",
+  "description": "Modern Traduora CLI with TypeScript and client_credentials support",
+  "type": "module",
+  "main": "./dist/lib.cjs",
+  "module": "./dist/lib.js",
+  "types": "./dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "import": "./dist/lib.js",
+      "require": "./dist/lib.cjs"
+    },
+    "./cli": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "traduora": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/lib.ts --format esm,cjs --dts --clean",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "traduora",
+    "cli",
+    "i18n"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^14.0.1",
+    "dotenv": "^17.2.3",
+    "jiti": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
