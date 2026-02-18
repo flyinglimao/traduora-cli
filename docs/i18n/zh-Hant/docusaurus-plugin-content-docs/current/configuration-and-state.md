@@ -3,6 +3,14 @@ id: configuration-and-state
 title: 設定與狀態檔
 ---
 
+## 可透過 init 產生檔案
+
+你可以使用互動式 [`init`](./init) 一次產生 config 與 state 檔案。
+
+```bash
+traduora init
+```
+
 ## 設定檔
 
 支援的設定檔名稱：

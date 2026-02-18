@@ -3,6 +3,14 @@ id: configuration-and-state
 title: Configuration and State
 ---
 
+## Generate files with init
+
+You can generate both config and state files interactively with [`init`](./init).
+
+```bash
+traduora init
+```
+
 ## Configuration file
 
 Supported config files:

@@ -3,6 +3,14 @@ id: configuration-and-state
 title: 設定と状態ファイル
 ---
 
+## init でファイルを生成する
+
+対話式の [`init`](./init) を使うと、config と state の両方を生成できます。
+
+```bash
+traduora init
+```
+
 ## 設定ファイル
 
 対応するファイル名：

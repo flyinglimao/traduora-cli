@@ -3,6 +3,14 @@ id: configuration-and-state
 title: 配置与状态文件
 ---
 
+## 可通过 init 生成文件
+
+你可以使用交互式 [`init`](./init) 一次生成 config 和 state 文件。
+
+```bash
+traduora init
+```
+
 ## 配置文件
 
 支持的配置文件名：
