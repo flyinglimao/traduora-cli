@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { TraduoraApi } from "./api.js";
@@ -30,6 +30,8 @@ const EXPORT_FORMATS: ExportFormat[] = [
   "po",
   "strings",
 ];
+
+const PROJECT_ROLES: ProjectRole[] = ["admin", "editor", "viewer"];
 
 interface GlobalOptions {
   config?: string;
@@ -159,22 +161,42 @@ async function main(): Promise<void> {
     .name("traduora")
     .description("Traduora CLI")
     .showHelpAfterError()
+    .showSuggestionAfterError()
     .option("-c, --config <path>", "path to config file")
     .option("--base-url <url>", "override base URL")
     .option("--token <token>", "use pre-generated access token")
-    .option("--state <path>", "state file path for current project/locale");
+    .option("--state <path>", "state file path for current project/locale")
+    .addHelpText(
+      "after",
+      "\nExamples:\n" +
+        "  traduora init --help\n" +
+        "  traduora project --help\n" +
+        "  traduora term --help\n" +
+        "  traduora translation --help\n" +
+        "  traduora export --help\n"
+    );
 
   program
     .command("init")
     .description("interactive setup: credentials or account login")
     .option("--url <url>", "Traduora base URL")
-    .option("--role <role>", "role used when creating project client", "editor")
+    .addOption(
+      new Option(
+        "--role <role>",
+        `role used when creating project client (one of: ${PROJECT_ROLES.join(", ")})`
+      )
+        .choices(PROJECT_ROLES)
+        .default("editor")
+    )
+    .addHelpText(
+      "after",
+      "\nExamples:\n" +
+        "  traduora init\n" +
+        "  traduora init --url https://app.traduora.co --role editor\n"
+    )
     .action(async (options: { url?: string; role: string }) => {
       const global = program.opts<GlobalOptions>();
       const role = options.role as ProjectRole;
-      if (!["admin", "editor", "viewer"].includes(role)) {
-        throw new Error("--role must be one of: admin, editor, viewer");
-      }
 
       await runInit({
         url: options.url ?? global.baseUrl,
@@ -497,8 +519,21 @@ async function main(): Promise<void> {
     .description("export translated terms for a locale")
     .option("--project <id>", "project id")
     .option("--locale <code>", "locale code")
-    .option("--format <format>", "export format", "jsonnested")
+    .addOption(
+      new Option(
+        "--format <format>",
+        `export format (one of: ${EXPORT_FORMATS.join(", ")})`
+      )
+        .choices(EXPORT_FORMATS)
+        .default("jsonnested")
+    )
     .option("--output <path>", "output file path")
+    .addHelpText(
+      "after",
+      "\nExamples:\n" +
+        "  traduora export --format jsonnested --output ./i18n/en_GB.json\n" +
+        "  traduora export --format csv --locale ja\n"
+    )
     .action(async (options: {
       project?: string;
       locale?: string;
