@@ -3,11 +3,9 @@ id: sdk
 title: JavaScript SDK
 ---
 
-Use `traduora-cli-next` directly in Node.js scripts when CLI alone is not enough.
+Use SDK scripts when you need programmable workflows beyond CLI commands.
 
-## Quick start
-
-### ESM
+## Example 1: Initialize API client
 
 ```js
 import { createApi } from "traduora-cli-next";
@@ -24,112 +22,53 @@ const { api } = await createApi({
 });
 
 const projects = await api.listProjects();
-console.log(projects);
+console.log(projects.map((p) => ({ id: p.id, name: p.name })));
 ```
 
-### CommonJS
+## Example 2: Update translation by term key
+
+`updateTranslation` needs `termId`, so resolve key -> ID first.
 
 ```js
-const { createApi } = require("traduora-cli-next");
+import { createApi } from "traduora-cli-next";
 
-(async () => {
-  const { api } = await createApi();
-  const projects = await api.listProjects();
-  console.log(projects);
-})();
+const { api } = await createApi();
+const projectId = "<project-id>";
+const locale = "en_GB";
+const termKey = "form.email.required";
+const message = "E-mail input is required";
+
+const terms = await api.listTerms(projectId);
+const term = terms.find((t) => t.value === termKey);
+if (!term) throw new Error(`Term not found: ${termKey}`);
+
+await api.updateTranslation(projectId, locale, term.id, message);
+console.log("translation updated");
 ```
 
-## `createApi` return value
+## Example 3: Export locale file
 
-`createApi(options)` returns:
+```js
+import { writeFile } from "node:fs/promises";
+import { createApi } from "traduora-cli-next";
 
-- `config`: resolved runtime config.
-- `client`: low-level authenticated HTTP client (`TraduoraClient`).
-- `api`: high-level wrapper (`TraduoraApi`).
+const { api } = await createApi();
+const projectId = "<project-id>";
+const locale = "ja";
 
-## Full generated TypeScript reference
+const data = await api.exportProject(projectId, locale, "jsonnested");
+await writeFile("./i18n/ja.json", data);
+console.log("exported ./i18n/ja.json");
+```
 
-For complete, symbol-by-symbol API docs (classes, interfaces, type aliases, functions), open:
+## Full TypeScript reference
+
+For all classes, methods, interfaces, and types, see:
 
 - [SDK TypeScript Reference](./sdk-reference)
 
-This reference is generated from source code with TypeDoc:
+Regenerate reference docs from source:
 
 ```bash
 pnpm docs:api-reference
 ```
-
-## API reference (`TraduoraApi`)
-
-Source of truth: `/Users/flyinglimao/Code/traduora-cli/src/api.ts`
-
-### Project methods
-
-- `listProjects(): Promise<ProjectDTO[]>`
-- `getProject(projectId: string): Promise<ProjectDTO>`
-- `createProject(input: { name: string; description?: string }): Promise<ProjectDTO>`
-- `updateProject(projectId: string, input: { name?: string; description?: string }): Promise<ProjectDTO>`
-- `deleteProject(projectId: string): Promise<void>`
-- `getProjectStatus(projectId: string): Promise<ProjectStatusDTO>`
-
-### Term methods
-
-- `listTerms(projectId: string): Promise<ProjectTermDTO[]>`
-- `addTerm(projectId: string, value: string): Promise<ProjectTermDTO>`
-- `updateTerm(projectId: string, termId: string, value: string): Promise<ProjectTermDTO>`
-- `deleteTerm(projectId: string, termId: string): Promise<void>`
-
-### Locale and translation methods
-
-- `listProjectLocales(projectId: string): Promise<ProjectLocaleDTO[]>`
-- `addProjectLocale(projectId: string, localeCode: string): Promise<ProjectLocaleDTO>`
-- `listTranslations(projectId: string, localeCode: string): Promise<TermTranslationDTO[]>`
-- `updateTranslation(projectId: string, localeCode: string, termId: string, value: string): Promise<TermTranslationDTO>`
-- `deleteLocale(projectId: string, localeCode: string): Promise<void>`
-- `listLocales(): Promise<LocaleDTO[]>`
-
-### Label methods
-
-- `listLabels(projectId: string): Promise<ProjectLabelDTO[]>`
-- `createLabel(projectId: string, value: string, color?: string): Promise<ProjectLabelDTO>`
-- `ensureLabels(projectId: string, values: string[]): Promise<ProjectLabelDTO[]>`
-- `setTermLabels(projectId: string, termId: string, currentLabelValues: string[], targetLabelValues: string[]): Promise<void>`
-- `setTranslationLabels(projectId: string, localeCode: string, termId: string, currentLabelValues: string[], targetLabelValues: string[]): Promise<void>`
-
-### Project client and export methods
-
-- `createProjectClient(projectId: string, input: { name: string; role: "admin" | "editor" | "viewer" }): Promise<ProjectClientWithSecretDTO>`
-- `exportProject(projectId: string, localeCode: string, format: ExportFormat): Promise<Buffer>`
-
-## Important: term key vs term ID
-
-SDK methods for translation currently require `termId` (UUID), not term key.
-
-If your app uses readable keys (recommended), map key to ID first:
-
-```js
-const terms = await api.listTerms(projectId);
-const term = terms.find((t) => t.value === "form.email.required");
-if (!term) throw new Error("term not found");
-
-await api.updateTranslation(projectId, "en_GB", term.id, "E-mail input is required");
-```
-
-## Low-level client (`TraduoraClient`)
-
-Use this only when you intentionally need raw HTTP behavior.
-
-- `getToken(): Promise<{ accessToken; expiresAtEpochMs; tokenType }>`
-- `request<T>(method: string, path: string, options?): Promise<T>`
-- `requestBuffer(method: string, path: string, options?): Promise<Buffer>`
-
-## Main exports
-
-- `createApi`
-- `TraduoraApi`
-- `TraduoraClient`
-- `requestAccessToken`
-- `resolveConfig`
-- `runInit`
-- `loadState` / `saveState` / `updateState`
-- TypeScript types

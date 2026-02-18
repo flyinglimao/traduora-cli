@@ -3,11 +3,9 @@ id: sdk
 title: JavaScript SDK
 ---
 
-CLI だけでは足りない処理は `traduora-cli-next` SDK を使って実装できます。
+CLI だけで足りない処理は SDK でスクリプト化できます。
 
-## クイックスタート
-
-### ESM
+## 例 1: API client を初期化する
 
 ```js
 import { createApi } from "traduora-cli-next";
@@ -24,112 +22,53 @@ const { api } = await createApi({
 });
 
 const projects = await api.listProjects();
-console.log(projects);
+console.log(projects.map((p) => ({ id: p.id, name: p.name })));
 ```
 
-### CommonJS
+## 例 2: term key で翻訳を更新する
+
+`updateTranslation` は `termId` が必要なので、先に key -> ID を解決します。
 
 ```js
-const { createApi } = require("traduora-cli-next");
+import { createApi } from "traduora-cli-next";
 
-(async () => {
-  const { api } = await createApi();
-  const projects = await api.listProjects();
-  console.log(projects);
-})();
+const { api } = await createApi();
+const projectId = "<project-id>";
+const locale = "en_GB";
+const termKey = "form.email.required";
+const message = "E-mail input is required";
+
+const terms = await api.listTerms(projectId);
+const term = terms.find((t) => t.value === termKey);
+if (!term) throw new Error(`Term not found: ${termKey}`);
+
+await api.updateTranslation(projectId, locale, term.id, message);
+console.log("translation updated");
 ```
 
-## `createApi` の返り値
+## 例 3: ロケールファイルをエクスポートする
 
-`createApi(options)` は以下を返します。
+```js
+import { writeFile } from "node:fs/promises";
+import { createApi } from "traduora-cli-next";
 
-- `config`: 解決済みの実行設定。
-- `client`: 低レベル認証 HTTP クライアント（`TraduoraClient`）。
-- `api`: 高レベル API ラッパー（`TraduoraApi`）。
+const { api } = await createApi();
+const projectId = "<project-id>";
+const locale = "ja";
 
-## 自動生成される完全 TypeScript Reference
+const data = await api.exportProject(projectId, locale, "jsonnested");
+await writeFile("./i18n/ja.json", data);
+console.log("exported ./i18n/ja.json");
+```
 
-クラス・インターフェース・型エイリアス・関数を含む完全な API リファレンスは以下を参照してください。
+## 完全 TypeScript reference
+
+全クラス・メソッド・インターフェース・型の詳細は以下を参照してください。
 
 - [SDK TypeScript Reference](./sdk-reference)
 
-このリファレンスは TypeDoc でソースコードから生成されます。
+ソースコードから reference を再生成するコマンド：
 
 ```bash
 pnpm docs:api-reference
 ```
-
-## API リファレンス（`TraduoraApi`）
-
-実装ソース：`/Users/flyinglimao/Code/traduora-cli/src/api.ts`
-
-### Project 関連
-
-- `listProjects(): Promise<ProjectDTO[]>`
-- `getProject(projectId: string): Promise<ProjectDTO>`
-- `createProject(input: { name: string; description?: string }): Promise<ProjectDTO>`
-- `updateProject(projectId: string, input: { name?: string; description?: string }): Promise<ProjectDTO>`
-- `deleteProject(projectId: string): Promise<void>`
-- `getProjectStatus(projectId: string): Promise<ProjectStatusDTO>`
-
-### Term 関連
-
-- `listTerms(projectId: string): Promise<ProjectTermDTO[]>`
-- `addTerm(projectId: string, value: string): Promise<ProjectTermDTO>`
-- `updateTerm(projectId: string, termId: string, value: string): Promise<ProjectTermDTO>`
-- `deleteTerm(projectId: string, termId: string): Promise<void>`
-
-### Locale / Translation 関連
-
-- `listProjectLocales(projectId: string): Promise<ProjectLocaleDTO[]>`
-- `addProjectLocale(projectId: string, localeCode: string): Promise<ProjectLocaleDTO>`
-- `listTranslations(projectId: string, localeCode: string): Promise<TermTranslationDTO[]>`
-- `updateTranslation(projectId: string, localeCode: string, termId: string, value: string): Promise<TermTranslationDTO>`
-- `deleteLocale(projectId: string, localeCode: string): Promise<void>`
-- `listLocales(): Promise<LocaleDTO[]>`
-
-### Label 関連
-
-- `listLabels(projectId: string): Promise<ProjectLabelDTO[]>`
-- `createLabel(projectId: string, value: string, color?: string): Promise<ProjectLabelDTO>`
-- `ensureLabels(projectId: string, values: string[]): Promise<ProjectLabelDTO[]>`
-- `setTermLabels(projectId: string, termId: string, currentLabelValues: string[], targetLabelValues: string[]): Promise<void>`
-- `setTranslationLabels(projectId: string, localeCode: string, termId: string, currentLabelValues: string[], targetLabelValues: string[]): Promise<void>`
-
-### Project client / Export 関連
-
-- `createProjectClient(projectId: string, input: { name: string; role: "admin" | "editor" | "viewer" }): Promise<ProjectClientWithSecretDTO>`
-- `exportProject(projectId: string, localeCode: string, format: ExportFormat): Promise<Buffer>`
-
-## 重要: term key と term ID
-
-現状 SDK の translation methods は `termId`（UUID）を必要とします（term key ではない）。
-
-可読 key を使う場合は、先に key を ID に変換してください。
-
-```js
-const terms = await api.listTerms(projectId);
-const term = terms.find((t) => t.value === "form.email.required");
-if (!term) throw new Error("term not found");
-
-await api.updateTranslation(projectId, "en_GB", term.id, "E-mail input is required");
-```
-
-## 低レベル client（`TraduoraClient`）
-
-生の HTTP 挙動が必要な場合のみ直接利用してください。
-
-- `getToken(): Promise<{ accessToken; expiresAtEpochMs; tokenType }>`
-- `request<T>(method: string, path: string, options?): Promise<T>`
-- `requestBuffer(method: string, path: string, options?): Promise<Buffer>`
-
-## 主なエクスポート
-
-- `createApi`
-- `TraduoraApi`
-- `TraduoraClient`
-- `requestAccessToken`
-- `resolveConfig`
-- `runInit`
-- `loadState` / `saveState` / `updateState`
-- TypeScript types
