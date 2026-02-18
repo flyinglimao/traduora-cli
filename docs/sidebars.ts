@@ -5,12 +5,12 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Getting Started",
-      items: ["intro", "configuration-and-state", "init"],
+      items: ["intro", "configuration-and-state"],
     },
     {
       type: "category",
       label: "CLI Reference",
-      items: ["cli", "project", "term", "translation", "export"],
+      items: ["cli", "init", "project", "term", "translation", "export"],
     },
     {
       type: "category",
