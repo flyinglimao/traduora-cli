@@ -1,4 +1,5 @@
 import { createInterface } from "node:readline/promises";
+import { readFileSync } from "node:fs";
 import { stdin as input, stdout as output } from "node:process";
 
 export interface AskOptions {
@@ -6,11 +7,44 @@ export interface AskOptions {
   allowEmpty?: boolean;
 }
 
+let sharedReadline:
+  | ReturnType<typeof createInterface>
+  | undefined;
+let pipedAnswers: string[] | undefined;
+
+function getReadline() {
+  if (!sharedReadline) {
+    sharedReadline = createInterface({ input, output });
+    process.once("exit", () => {
+      sharedReadline?.close();
+      sharedReadline = undefined;
+    });
+  }
+
+  return sharedReadline;
+}
+
+function getPipedAnswers(): string[] {
+  if (!pipedAnswers) {
+    const raw = readFileSync(0, "utf8");
+    pipedAnswers = raw.split(/\r?\n/);
+  }
+
+  return pipedAnswers;
+}
+
 export async function askText(question: string, options: AskOptions = {}): Promise<string> {
-  const rl = createInterface({ input, output });
   const suffix = options.defaultValue ? ` (${options.defaultValue})` : "";
-  const answer = (await rl.question(`${question}${suffix}: `)).trim();
-  rl.close();
+  let answer = "";
+
+  if (!input.isTTY) {
+    output.write(`${question}${suffix}: `);
+    const queue = getPipedAnswers();
+    answer = (queue.shift() ?? "").trim();
+  } else {
+    const rl = getReadline();
+    answer = (await rl.question(`${question}${suffix}: `)).trim();
+  }
 
   if (!answer && options.defaultValue !== undefined) {
     return options.defaultValue;
@@ -21,6 +55,12 @@ export async function askText(question: string, options: AskOptions = {}): Promi
   }
 
   return answer;
+}
+
+export function closePromptInterface(): void {
+  sharedReadline?.close();
+  sharedReadline = undefined;
+  pipedAnswers = undefined;
 }
 
 export async function askChoice(

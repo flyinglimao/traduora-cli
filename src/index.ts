@@ -7,6 +7,7 @@ import { requestAccessToken } from "./auth.js";
 import { TraduoraClient } from "./client.js";
 import { resolveConfig } from "./config.js";
 import { runInit } from "./init.js";
+import { closePromptInterface } from "./prompts.js";
 import { loadState, updateState } from "./state.js";
 import type {
   CliState,
@@ -103,6 +104,17 @@ function requireLocale(localeFromOption: string | undefined, state: CliState): s
   return locale;
 }
 
+function resolveOverrides(global: GlobalOptions): Partial<ResolvedConfig> {
+  const overrides: Partial<ResolvedConfig> = {};
+  if (global.baseUrl) {
+    overrides.baseUrl = global.baseUrl;
+  }
+  if (global.token) {
+    overrides.accessToken = global.token;
+  }
+  return overrides;
+}
+
 async function loadRuntime(global: GlobalOptions): Promise<{
   config: ResolvedConfig;
   state: CliState;
@@ -110,10 +122,7 @@ async function loadRuntime(global: GlobalOptions): Promise<{
 }> {
   const config = await resolveConfig({
     configPath: global.config,
-    overrides: {
-      baseUrl: global.baseUrl,
-      accessToken: global.token,
-    },
+    overrides: resolveOverrides(global),
   });
   const state = await loadState(global.state);
   const client = new TraduoraClient(config);
@@ -213,10 +222,7 @@ async function main(): Promise<void> {
       const global = program.opts<GlobalOptions>();
       const config = await resolveConfig({
         configPath: global.config,
-        overrides: {
-          baseUrl: global.baseUrl,
-          accessToken: global.token,
-        },
+        overrides: resolveOverrides(global),
       });
       const token = await requestAccessToken(config);
       printJson({
@@ -559,7 +565,11 @@ async function main(): Promise<void> {
       printJson({ projectId, locale, format, output: outputPath, bytes: data.byteLength });
     });
 
-  await program.parseAsync(process.argv);
+  try {
+    await program.parseAsync(process.argv);
+  } finally {
+    closePromptInterface();
+  }
 }
 
 main().catch((error: unknown) => {
