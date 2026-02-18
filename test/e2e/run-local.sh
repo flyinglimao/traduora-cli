@@ -11,8 +11,14 @@ trap cleanup EXIT
 
 cd "$ROOT_DIR"
 
+if command -v pnpm >/dev/null 2>&1; then
+  PNPM_CMD=(pnpm)
+else
+  PNPM_CMD=(corepack pnpm)
+fi
+
 echo "[e2e] Building CLI + SDK"
-pnpm build >/dev/null
+"${PNPM_CMD[@]}" build >/dev/null
 
 echo "[e2e] Starting docker compose test environment"
 docker compose -f "$COMPOSE_FILE" up -d
