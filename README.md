@@ -1,215 +1,235 @@
-# traduora-cli-next
+# @0xlimao/traduora-cli
 
-重寫版 Traduora CLI（TypeScript + pnpm）。
+A modern CLI and JavaScript SDK for [Traduora](https://docs.traduora.co/) with first-class `client_credentials` support.
 
-這個版本以「可直接操作翻譯資料」為主，不提供通用 `request` 指令。
+- CLI commands for projects, terms, translations, and exports
+- Interactive `init` flow to bootstrap credentials and default state
+- SDK package for scripting with both ESM and CommonJS
+- Docusaurus documentation with English, Traditional Chinese, Simplified Chinese, and Japanese
 
-同時也提供 JS SDK，可用於 Node.js 腳本（ESM + CommonJS）。
+## Table of Contents
 
-## 安裝
+- [Highlights](#highlights)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [CLI Usage](#cli-usage)
+- [Configuration](#configuration)
+- [JavaScript SDK](#javascript-sdk)
+- [Documentation Site](#documentation-site)
+- [Development](#development)
+- [Testing](#testing)
+- [Release](#release)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Highlights
+
+- Uses term `value` as the user-facing key (instead of UUIDs)
+- Supports `client_credentials` as the default auth model
+- Supports interactive account login to create a project client automatically
+- Supports config file logic (`json/js/ts`) and environment variable fallback
+
+## Installation
+
+### From npm
 
 ```bash
+pnpm add @0xlimao/traduora-cli
+```
+
+### Global CLI install
+
+```bash
+pnpm add -g @0xlimao/traduora-cli
+```
+
+### From source
+
+```bash
+git clone https://github.com/flyinglimao/traduora-cli.git
+cd traduora-cli
 pnpm install
 pnpm build
 ```
 
-開發模式：
+## Quick Start
+
+Initialize interactively:
 
 ```bash
-pnpm dev -- --help
+traduora init
 ```
 
-## 作為套件使用（ESM + CJS）
-
-### ESM
-
-```js
-import { createApi } from "traduora-cli-next";
-
-const { api } = await createApi();
-const projects = await api.listProjects();
-console.log(projects);
-```
-
-### CommonJS
-
-```js
-const { createApi } = require("traduora-cli-next");
-
-(async () => {
-  const { api } = await createApi();
-  const projects = await api.listProjects();
-  console.log(projects);
-})();
-```
-
-## 文件站（GitHub Pages）
-
-專案已提供 `/docs` 的 Docusaurus 站點，可直接設定為 GitHub Pages 來源，並支援多語系：
-
-- `en`（English）
-- `zh-Hant`（繁體中文）
-- `zh-Hans`（简体中文）
-- `ja`（日本語）
-
-本機啟動文件站：
+Show help:
 
 ```bash
-cd /Users/flyinglimao/Code/traduora-cli/docs
-pnpm install
-pnpm start
+traduora --help
+traduora project --help
+traduora term --help
+traduora translation --help
+traduora export --help
 ```
 
-## 設定來源
+Typical flow:
 
-優先順序：`env` < `config file` < CLI options
+```bash
+traduora project use <projectId>
+traduora translation use en_GB
+traduora term add form.email.required
+traduora translation add --term form.email.required --value "E-mail input is required"
+traduora export --format jsonnested --output ./i18n/en_GB.json
+```
 
-可用設定來源：
+## CLI Usage
 
-1. `traduora.config.json`
-2. `traduora.config.ts/js/mjs/cjs`（可帶邏輯）
-3. 環境變數 fallback
+### Init
 
-支援的環境變數：
+```bash
+traduora init --help
+```
+
+`init` supports:
+
+- Input API credentials directly (`client_credentials`)
+- Login with account/password, then create a project client (`--role admin|editor|viewer`)
+
+### Project
+
+```bash
+traduora project --help
+traduora project add --help
+traduora project list --help
+traduora project update --help
+traduora project remove --help
+traduora project status --help
+traduora project use --help
+```
+
+### Term
+
+```bash
+traduora term --help
+traduora term add --help
+traduora term list --help
+traduora term update --help
+traduora term delete --help
+```
+
+### Translation
+
+```bash
+traduora translation --help
+traduora translation use --help
+traduora translation add --help
+traduora translation list --help
+traduora translation update --help
+traduora translation delete --help
+```
+
+### Export
+
+```bash
+traduora export --help
+```
+
+## Configuration
+
+Priority order:
+
+1. Environment variables
+2. Config file
+3. CLI options
+
+Supported config files:
+
+- `traduora.config.json`
+- `traduora.config.ts`
+- `traduora.config.js`
+- `traduora.config.mjs`
+- `traduora.config.cjs`
+
+Supported environment variables:
 
 - `TRADUORA_BASE_URL`
-- `TRADUORA_GRANT_TYPE` (`client_credentials` 或 `password`)
+- `TRADUORA_GRANT_TYPE`
 - `TRADUORA_CLIENT_ID`
 - `TRADUORA_CLIENT_SECRET`
 - `TRADUORA_USERNAME`
 - `TRADUORA_PASSWORD`
 - `TRADUORA_ACCESS_TOKEN`
 
-`project use` / `translation use` 會寫入 `.traduora.state.json`。
+State (`project use`, `translation use`) is stored in `.traduora.state.json`.
 
-## init（互動式）
+## JavaScript SDK
 
-```bash
-pnpm dev -- init
-```
-
-`init` 會詢問：
-
-1. URL
-2. 模式：
-   - 輸入 API credentials（client_credentials）
-   - 帳號密碼登入（password）並建立 project client（預設 role=editor）
-
-帳號登入模式會：
-
-1. 用帳密拿 user token
-2. 選 project
-3. 建立 project client
-4. 驗證 client_credentials
-5. 寫入 `traduora.config.json`
-6. 寫入預設 project 到 `.traduora.state.json`
-
-可用參數：
-
-- `--url <url>`
-- `--role <admin|editor|viewer>`
-- `--config <path>`（僅支援寫入 `.json`）
-
-## 指令
-
-### project
-
-```bash
-traduora project add my-project --description "demo" --label platform,app
-traduora project list
-traduora project update <projectId> --name new-name --label product
-traduora project remove <projectId>
-traduora project status <projectId>
-traduora project use <projectId>
-```
-
-> `project add/update --label` 會確保對應 label 存在於該 project。
-
-### term
-
-```bash
-traduora term add email_required_validation_error
-traduora term list
-traduora term update email_required_validation_error --new-value form.email.required
-traduora term delete form.email.required
-```
-
-可加：
-
-- `--project <id>`
-- `--label <a,b>`（可重複）
-
-## translation
-
-```bash
-traduora translation use en_GB
-traduora translation add --term form.email.required --value "E-mail input is required"
-traduora translation list
-traduora translation update --term form.email.required --value "E-mail is required" --label validation
-traduora translation delete --term form.email.required
-```
-
-可加：
-
-- `--project <id>`
-- `--locale <code>`
-- `--label <a,b>`（add/update）
-
-## export
-
-```bash
-traduora export --format jsonnested --output ./i18n/en_GB.json
-```
-
-可加：
-
-- `--project <id>`
-- `--locale <code>`
-- `--format <androidxml|csv|xliff12|jsonflat|jsonnested|yamlflat|yamlnested|properties|po|strings>`
-
-## 關於 term key 與 translation
-
-本 CLI 對外一律使用 `term.value` 作為 key（例如 `form.email.required`），不讓使用者記 UUID。
-
-例如：
-
-```bash
-traduora term add form.email.required
-traduora translation add --term form.email.required --value "E-mail input is required"
-```
-
-內部會自動透過 term list 建立 `value -> termId` mapping 後呼叫 translation API。
-
-## 設定檔範例
-
-### JSON
-
-```json
-{
-  "baseUrl": "https://app.traduora.co",
-  "auth": {
-    "grantType": "client_credentials",
-    "clientId": "your-client-id",
-    "clientSecret": "your-client-secret"
-  }
-}
-```
-
-### TS
+### ESM
 
 ```ts
-export default ({ env }: { env: NodeJS.ProcessEnv }) => ({
-  baseUrl: env.TRADUORA_BASE_URL ?? "https://app.traduora.co",
-  auth: {
-    grantType: "client_credentials",
-    clientId: env.TRADUORA_CLIENT_ID,
-    clientSecret: env.TRADUORA_CLIENT_SECRET,
-  },
-});
+import { createApi } from "@0xlimao/traduora-cli";
+
+const { api } = await createApi();
+const terms = await api.listTerms("<projectId>");
+console.log(terms);
 ```
 
-## 參考
+### CommonJS
 
-- <https://docs.traduora.co/docs/tools/cli>
-- <https://docs.traduora.co/docs/api/v1/swagger#/>
-- <https://docs.traduora.co/docs/api/v1/swagger.json>
+```js
+const { createApi } = require("@0xlimao/traduora-cli");
+
+(async () => {
+  const { api } = await createApi();
+  const terms = await api.listTerms("<projectId>");
+  console.log(terms);
+})();
+```
+
+For full method details, see the SDK TypeScript Reference in the docs site.
+
+## Documentation Site
+
+- Production: <https://flyinglimao.github.io/traduora-cli/>
+- Source: `docs/`
+
+Run locally:
+
+```bash
+cd docs
+pnpm install
+pnpm start
+```
+
+## Development
+
+```bash
+pnpm install
+pnpm build
+pnpm typecheck
+pnpm dev -- --help
+```
+
+## Testing
+
+Local Docker integration test (CLI + SDK against real Traduora instance):
+
+```bash
+pnpm test:e2e:local
+```
+
+See test instructions in `test/README.md`.
+
+## Release
+
+- npm publish is handled by GitHub Actions with npm Trusted Publishing (OIDC)
+- Docs are deployed to GitHub Pages by GitHub Actions
+
+## Contributing
+
+Issues and pull requests are welcome:
+
+- Issues: <https://github.com/flyinglimao/traduora-cli/issues>
+- Repository: <https://github.com/flyinglimao/traduora-cli>
+
+## License
+
+MIT. See `LICENSE`.
