@@ -1,6 +1,6 @@
 {
   "name": "@0xlimao/traduora-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Modern Traduora CLI with TypeScript and client_credentials support",
   "type": "module",
   "main": "./dist/lib.cjs",
