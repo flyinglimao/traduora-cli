@@ -46,10 +46,6 @@ interface LabelOption {
   label?: string[];
 }
 
-interface ProjectOption {
-  project?: string;
-}
-
 interface LocaleOption {
   locale?: string;
 }
@@ -95,10 +91,10 @@ function printProjects(projects: ProjectDTO[], currentProjectId?: string): void 
   }
 }
 
-function requireProjectId(projectFromOption: string | undefined, state: CliState): string {
-  const projectId = projectFromOption ?? state.currentProjectId;
+function requireProjectId(state: CliState): string {
+  const projectId = state.currentProjectId;
   if (!projectId) {
-    throw new Error("Project not set. Use --project <id> or run: traduora project use <id>");
+    throw new Error("Project not set. Run: traduora project use");
   }
   return projectId;
 }
@@ -178,6 +174,7 @@ async function pickProjectId(
     return explicitProjectId;
   }
 
+  const defaultProjectId = state.currentProjectId ?? projects[0]?.id;
   const picked = await askSelect(
     `Select project to ${action}`,
     [
@@ -187,7 +184,7 @@ async function pickProjectId(
       })),
       { value: "__skip__", label: "Skip" },
     ],
-    (state.currentProjectId ?? projects[0]?.id) as string
+    defaultProjectId
   );
 
   if (picked === "__skip__") {
@@ -407,7 +404,7 @@ async function main(): Promise<void> {
     .action(async (id: string | undefined) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = requireProjectId(id, state);
+      const projectId = id ?? requireProjectId(state);
       const status = await api.getProjectStatus(projectId);
       printJson({ projectId, status });
     });
@@ -444,12 +441,11 @@ async function main(): Promise<void> {
   term
     .command("add")
     .argument("<value>", "term key")
-    .option("--project <id>", "project id")
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
-    .action(async (value: string, options: ProjectOption & LabelOption) => {
+    .action(async (value: string, options: LabelOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = requireProjectId(options.project, state);
+      const projectId = requireProjectId(state);
 
       const created = await api.addTerm(projectId, value);
       const labels = parseLabels(options.label);
@@ -462,11 +458,10 @@ async function main(): Promise<void> {
 
   term
     .command("list")
-    .option("--project <id>", "project id")
-    .action(async (options: ProjectOption) => {
+    .action(async () => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = requireProjectId(options.project, state);
+      const projectId = requireProjectId(state);
       const terms = await api.listTerms(projectId);
       printJson({ projectId, terms });
     });
@@ -475,12 +470,11 @@ async function main(): Promise<void> {
     .command("update")
     .argument("<value>", "current term key")
     .requiredOption("--new-value <value>", "new term key")
-    .option("--project <id>", "project id")
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
-    .action(async (value: string, options: { newValue: string } & ProjectOption & LabelOption) => {
+    .action(async (value: string, options: { newValue: string } & LabelOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = requireProjectId(options.project, state);
+      const projectId = requireProjectId(state);
 
       const found = await findTermByValue(api, projectId, value);
       const updated = await api.updateTerm(projectId, found.id, options.newValue);
@@ -496,11 +490,10 @@ async function main(): Promise<void> {
   term
     .command("delete")
     .argument("<value>", "term key")
-    .option("--project <id>", "project id")
-    .action(async (value: string, options: ProjectOption) => {
+    .action(async (value: string) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = requireProjectId(options.project, state);
+      const projectId = requireProjectId(state);
 
       const found = await findTermByValue(api, projectId, value);
       await api.deleteTerm(projectId, found.id);
@@ -530,12 +523,11 @@ async function main(): Promise<void> {
 
   translation
     .command("list")
-    .option("--project <id>", "project id")
     .option("--locale <code>", "locale code")
-    .action(async (options: ProjectOption & LocaleOption) => {
+    .action(async (options: LocaleOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = requireProjectId(options.project, state);
+      const projectId = requireProjectId(state);
       const locale = requireLocale(options.locale, state);
 
       const [translations, terms] = await Promise.all([
@@ -551,14 +543,13 @@ async function main(): Promise<void> {
     options: {
       term: string;
       value: string;
-      project?: string;
       locale?: string;
       label?: string[];
     }
   ): Promise<void> => {
     const global = program.opts<GlobalOptions>();
     const { api, state } = await loadRuntime(global);
-    const projectId = requireProjectId(options.project, state);
+    const projectId = requireProjectId(state);
     const locale = requireLocale(options.locale, state);
 
     await ensureLocaleExists(api, projectId, locale);
@@ -587,13 +578,11 @@ async function main(): Promise<void> {
     .command("add")
     .requiredOption("--term <value>", "term key")
     .requiredOption("--value <text>", "translation value")
-    .option("--project <id>", "project id")
     .option("--locale <code>", "locale code")
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
     .action(async (options: {
       term: string;
       value: string;
-      project?: string;
       locale?: string;
       label?: string[];
     }) => {
@@ -604,13 +593,11 @@ async function main(): Promise<void> {
     .command("update")
     .requiredOption("--term <value>", "term key")
     .requiredOption("--value <text>", "translation value")
-    .option("--project <id>", "project id")
     .option("--locale <code>", "locale code")
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
     .action(async (options: {
       term: string;
       value: string;
-      project?: string;
       locale?: string;
       label?: string[];
     }) => {
@@ -620,12 +607,11 @@ async function main(): Promise<void> {
   translation
     .command("delete")
     .requiredOption("--term <value>", "term key")
-    .option("--project <id>", "project id")
     .option("--locale <code>", "locale code")
-    .action(async (options: { term: string; project?: string; locale?: string }) => {
+    .action(async (options: { term: string; locale?: string }) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = requireProjectId(options.project, state);
+      const projectId = requireProjectId(state);
       const locale = requireLocale(options.locale, state);
 
       const found = await findTermByValue(api, projectId, options.term);
@@ -641,7 +627,6 @@ async function main(): Promise<void> {
   program
     .command("export")
     .description("export translated terms for a locale")
-    .option("--project <id>", "project id")
     .option("--locale <code>", "locale code")
     .addOption(
       new Option(
@@ -659,14 +644,13 @@ async function main(): Promise<void> {
         "  traduora export --format csv --locale ja\n"
     )
     .action(async (options: {
-      project?: string;
       locale?: string;
       format: string;
       output?: string;
     }) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = requireProjectId(options.project, state);
+      const projectId = requireProjectId(state);
       const locale = requireLocale(options.locale, state);
 
       const format = options.format as ExportFormat;

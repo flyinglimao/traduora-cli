@@ -52,6 +52,7 @@
   },
   "homepage": "https://flyinglimao.github.io/traduora-cli/",
   "dependencies": {
+    "@inquirer/prompts": "^7.9.0",
     "commander": "^14.0.1",
     "dotenv": "^17.2.3",
     "jiti": "^2.6.1"

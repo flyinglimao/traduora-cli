@@ -9,7 +9,7 @@ title: Init Command
 
 - Validate your credentials before saving.
 - Generate config file for future commands.
-- Optionally set default project in state file.
+- Set default project in state file.
 
 ## Command
 
@@ -26,27 +26,24 @@ You provide client credentials directly:
 - `clientId`
 - `clientSecret`
 
-The command validates them via token request, then writes config.
+The command validates them via token request, then asks for `projectId`.
+
+- Prompt includes hint: find ID from web URL  
+  `https://<domain>/projects/<id>/translations`
+- The entered `projectId` is saved as default project in state.
 
 ### Mode B: Login account and auto-create project client
 
 You provide account email/password:
 
-1. CLI requests user token (`grant_type=password`).
-2. CLI asks which project to use (interactive project picker, arrow keys).
-3. CLI creates project client with role (`editor` by default).
-4. CLI validates generated client credentials.
-5. CLI writes config.
-6. CLI asks for default project in state via project picker (last option is `Skip`).
-
-## Default project setup prompt
-
-After config is saved, `init` asks for default project setup.
-
-- Project selection is interactive (arrow keys + Enter).
-- The last option is `Skip`.
-- Password input is hidden in interactive login prompts.
-- If you select a project, it is written to state (`.traduora.state.json` by default).
+1. CLI asks account email/password (password input is hidden).
+2. CLI requests user token (`grant_type=password`).
+3. CLI fetches project list.
+4. CLI asks which project to use (interactive picker, arrow keys).
+5. CLI creates project client with role (`editor` by default).
+6. CLI validates generated client credentials.
+7. CLI writes config.
+8. CLI writes selected project as default project in state.
 
 ## Parameters
 

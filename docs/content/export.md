@@ -8,14 +8,14 @@ title: Export Command
 ## Command
 
 ```bash
-traduora export [--project <id>] [--locale <code>] [--format <format>] [--output <path>]
+traduora export [--locale <code>] [--format <format>] [--output <path>]
 ```
 
 ## Options
 
 | Option | Purpose | Default |
 |---|---|---|
-| `--project` | target project | current project |
+| project | current project from state | `currentProjectId` |
 | `--locale` | target locale | current locale |
 | `--format` | output format | `jsonnested` |
 | `--output` | output file path | `<project>.<locale>.<format>` |
@@ -37,5 +37,5 @@ traduora export [--project <id>] [--locale <code>] [--format <format>] [--output
 
 ```bash
 traduora export --format jsonnested --output ./i18n/en_GB.json
-traduora export --project <id> --locale ja --format jsonflat --output ./i18n/ja.json
+traduora export --locale ja --format jsonflat --output ./i18n/ja.json
 ```

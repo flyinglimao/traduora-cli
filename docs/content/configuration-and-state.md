@@ -72,9 +72,9 @@ Example:
 
 You can override state path per command with `--state <path>`.
 
-## Why commands sometimes do not require `--project` or `--locale`
+## Why commands sometimes do not require `--locale`
 
-- `--project` is optional if `currentProjectId` is already set.
+- Project-scoped commands use `currentProjectId` from state.
 - `--locale` is optional if `currentLocale` is already set.
 
-If neither is set, the command will fail and tell you exactly what to provide.
+If required state is missing, the command fails with guidance.

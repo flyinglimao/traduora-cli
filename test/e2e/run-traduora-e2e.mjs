@@ -85,6 +85,46 @@ async function signupUser(email, password) {
   }
 }
 
+async function getPasswordGrantToken(email, password) {
+  const response = await fetch(`${baseUrl}/api/v1/auth/token`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({
+      grant_type: "password",
+      username: email,
+      password,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Password grant token failed (${response.status}): ${body}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+async function createProjectForUser(accessToken, name) {
+  const response = await fetch(`${baseUrl}/api/v1/projects`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json",
+      authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Create project failed (${response.status}): ${body}`);
+  }
+}
+
 async function main() {
   await mkdir(tmpDir, { recursive: true });
   await rm(configPath, { force: true });
@@ -100,6 +140,8 @@ async function main() {
 
   console.log(`[e2e] Signing up user: ${email}`);
   await signupUser(email, password);
+  const userAccessToken = await getPasswordGrantToken(email, password);
+  await createProjectForUser(userAccessToken, `e2e-project-${stamp}`);
 
   // init mode 2 interactive flow (login + create project client)
   const initInput = [
@@ -107,9 +149,7 @@ async function main() {
     "2", // mode: login and create client
     email,
     password,
-    `e2e-project-${stamp}`,
-    "", // project description (optional)
-    "", // pick default project id
+    "1", // pick first project from select prompt
     "", // use default generated client name
   ].join("\n");
 

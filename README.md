@@ -90,8 +90,8 @@ traduora init --help
 
 `init` supports:
 
-- Input API credentials directly (`client_credentials`)
-- Login with account/password, then create a project client (`--role admin|editor|viewer`)
+- Input API credentials directly (`client_credentials`), then prompt for project ID
+- Login with account/password, select a project, then create a project client (`--role admin|editor|viewer`)
 
 ### Project
 
@@ -118,6 +118,8 @@ This writes `.traduora.user.json` and auto-adds it to `.gitignore`.
 
 Interactive login does not echo password input.
 When project selection is required (for example `project use/update/remove` without ID), the CLI shows an arrow-key picker and includes `Skip` as the last option.
+
+For term/translation/export commands, project is resolved from `currentProjectId` in state.
 
 ### Term
 
