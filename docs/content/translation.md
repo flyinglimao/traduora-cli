@@ -24,10 +24,11 @@ Upserts translation value for given term and locale.
 ## `translation list`
 
 ```bash
-traduora translation list [--locale <code>]
+traduora translation list [--locale <code>] [--format <table|json>]
 ```
 
 Lists translations and resolves term IDs back to term keys.
+Default output is `table`; use `--format json` for automation scripts.
 
 ## `translation update`
 

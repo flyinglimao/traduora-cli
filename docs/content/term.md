@@ -16,10 +16,12 @@ Creates a term key in the current project.
 ## `term list`
 
 ```bash
-traduora term list
+traduora term list [--format <table|json>]
 ```
 
 Lists all terms in the current project.
+Default output is `table` with `value`, `context`, and `label` columns.
+Use `--format json` for scripts.
 
 ## `term update`
 
@@ -46,6 +48,8 @@ Finds term by key and deletes it.
 ## Example
 
 ```bash
+traduora term list
+traduora term list --format json
 traduora term add form.email.required --label form,validation
 traduora term update form.email.required --new-value form.email.missing --label validation
 ```

@@ -7,6 +7,7 @@ import { requestAccessToken } from "./auth.js";
 import { TraduoraClient } from "./client.js";
 import { resolveConfig } from "./config.js";
 import { runInit } from "./init.js";
+import { OUTPUT_FORMATS, printJson, printTable, type OutputFormat } from "./output.js";
 import { closePromptInterface } from "./prompts.js";
 import { loadState, updateState } from "./state.js";
 import type {
@@ -48,6 +49,10 @@ interface LocaleOption {
   locale?: string;
 }
 
+interface FormatOption {
+  format?: string;
+}
+
 function collect(value: string, previous: string[]): string[] {
   return [...previous, value];
 }
@@ -68,10 +73,6 @@ function parseLabels(input?: string[]): string[] {
   }
 
   return [...out];
-}
-
-function printJson(payload: unknown): void {
-  console.log(JSON.stringify(payload, null, 2));
 }
 
 function requireProjectId(state: CliState): string {
@@ -149,6 +150,36 @@ function buildTranslationRows(
   }));
 }
 
+function resolveOutputFormat(
+  requested: string | undefined,
+  fallback: OutputFormat
+): OutputFormat {
+  if (!requested) {
+    return fallback;
+  }
+
+  if (!OUTPUT_FORMATS.includes(requested as OutputFormat)) {
+    throw new Error(`Invalid --format. Allowed: ${OUTPUT_FORMATS.join(", ")}`);
+  }
+
+  return requested as OutputFormat;
+}
+
+function extractTermContext(term: ProjectTermDTO): string {
+  const context = (term as ProjectTermDTO & { context?: unknown }).context;
+  if (context === undefined || context === null) {
+    return "";
+  }
+  if (typeof context === "string") {
+    return context;
+  }
+  return JSON.stringify(context);
+}
+
+function labelsAsCsv(labels: string[]): string {
+  return labels.join(", ");
+}
+
 async function main(): Promise<void> {
   const program = new Command();
 
@@ -223,12 +254,37 @@ async function main(): Promise<void> {
   project
     .command("status")
     .description("show status for current project from state/config")
-    .action(async () => {
+    .addOption(
+      new Option("--format <format>", `output format (one of: ${OUTPUT_FORMATS.join(", ")})`)
+        .choices(OUTPUT_FORMATS)
+        .default("table")
+    )
+    .action(async (options: FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
       const projectId = requireProjectId(state);
       const status = await api.getProjectStatus(projectId);
-      printJson({ projectId, status });
+      const format = resolveOutputFormat(options.format, "table");
+
+      if (format === "json") {
+        printJson({ projectId, status });
+        return;
+      }
+
+      const stats = status.projectStats;
+      const rows: Array<{ metric: string; value: string | number }> = [
+        { metric: "projectId", value: projectId },
+        { metric: "progress", value: stats.progress },
+        { metric: "translated", value: stats.translated },
+        { metric: "total", value: stats.total },
+        { metric: "terms", value: stats.terms },
+        { metric: "locales", value: stats.locales },
+      ];
+
+      printTable(rows, [
+        { key: "metric", header: "metric" },
+        { key: "value", header: "value" },
+      ]);
     });
 
   const term = program.command("term").description("term operations");
@@ -253,12 +309,34 @@ async function main(): Promise<void> {
 
   term
     .command("list")
-    .action(async () => {
+    .addOption(
+      new Option("--format <format>", `output format (one of: ${OUTPUT_FORMATS.join(", ")})`)
+        .choices(OUTPUT_FORMATS)
+        .default("table")
+    )
+    .action(async (options: FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
       const projectId = requireProjectId(state);
       const terms = await api.listTerms(projectId);
-      printJson({ projectId, terms });
+      const format = resolveOutputFormat(options.format, "table");
+
+      if (format === "json") {
+        printJson({ projectId, terms });
+        return;
+      }
+
+      const rows = terms.map((termItem) => ({
+        value: termItem.value,
+        context: extractTermContext(termItem),
+        label: labelsAsCsv(termItem.labels),
+      }));
+
+      printTable(rows, [
+        { key: "value", header: "value" },
+        { key: "context", header: "context" },
+        { key: "label", header: "label" },
+      ]);
     });
 
   term
@@ -319,7 +397,12 @@ async function main(): Promise<void> {
   translation
     .command("list")
     .option("--locale <code>", "locale code")
-    .action(async (options: LocaleOption) => {
+    .addOption(
+      new Option("--format <format>", `output format (one of: ${OUTPUT_FORMATS.join(", ")})`)
+        .choices(OUTPUT_FORMATS)
+        .default("table")
+    )
+    .action(async (options: LocaleOption & FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
       const projectId = requireProjectId(state);
@@ -330,7 +413,24 @@ async function main(): Promise<void> {
         api.listTerms(projectId),
       ]);
       const rows = buildTranslationRows(translations, terms);
-      printJson({ projectId, locale, translations: rows });
+      const format = resolveOutputFormat(options.format, "table");
+
+      if (format === "json") {
+        printJson({ projectId, locale, translations: rows });
+        return;
+      }
+
+      const tableRows = rows.map((row) => ({
+        term: row.term,
+        value: row.value,
+        label: labelsAsCsv(row.labels),
+      }));
+
+      printTable(tableRows, [
+        { key: "term", header: "term" },
+        { key: "value", header: "value" },
+        { key: "label", header: "label" },
+      ]);
     });
 
   const upsertTranslation = async (

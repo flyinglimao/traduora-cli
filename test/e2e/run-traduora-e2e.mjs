@@ -171,6 +171,14 @@ async function main() {
 
   const termKey = `e2e.message.${stamp}`;
   runNodeCli(["term", "add", termKey, "--label", "smoke"]);
+  const termListTableOutput = runNodeCli(["term", "list"]);
+  assert(
+    /value\s+\|\s+context\s+\|\s+label/.test(termListTableOutput),
+    "term list default output is not table format"
+  );
+  assert(termListTableOutput.includes(termKey), "term list table output does not include created term");
+  const termListJsonOutput = runNodeCli(["term", "list", "--format", "json"]);
+  assert(termListJsonOutput.includes('"terms"'), "term list --format json output is invalid");
 
   runNodeCli(["translation", "use", "en_GB"]);
 
