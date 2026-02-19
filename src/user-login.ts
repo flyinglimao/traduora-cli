@@ -3,7 +3,7 @@ import path from "node:path";
 import { TraduoraApi } from "./api.js";
 import { requestAccessToken } from "./auth.js";
 import { TraduoraClient } from "./client.js";
-import { askText } from "./prompts.js";
+import { askSecret, askText } from "./prompts.js";
 
 export const DEFAULT_USER_LOGIN_PATH = ".traduora.user.json";
 
@@ -89,7 +89,7 @@ export async function resolveUserLogin(
   const password =
     options.password ??
     (stored?.baseUrl === options.baseUrl ? stored.password : undefined) ??
-    (await askText("Account password"));
+    (await askSecret("Account password"));
 
   if (options.persistent) {
     await writeStoredCredentials(credentialsPath, {

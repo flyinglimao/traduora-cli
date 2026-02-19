@@ -7,7 +7,7 @@ import { requestAccessToken } from "./auth.js";
 import { TraduoraClient } from "./client.js";
 import { resolveConfig } from "./config.js";
 import { runInit } from "./init.js";
-import { askText, closePromptInterface } from "./prompts.js";
+import { askSelect, closePromptInterface } from "./prompts.js";
 import { loadState, updateState } from "./state.js";
 import { createUserApi } from "./user-login.js";
 import type {
@@ -164,7 +164,7 @@ async function pickProjectId(
   state: CliState,
   explicitProjectId: string | undefined,
   action: string
-): Promise<string> {
+): Promise<string | undefined> {
   const projects = await api.listProjects();
   if (projects.length === 0) {
     throw new Error("No project found for this account.");
@@ -178,13 +178,20 @@ async function pickProjectId(
     return explicitProjectId;
   }
 
-  printProjects(projects, state.currentProjectId);
-  const picked = await askText(`Pick project id to ${action}`, {
-    defaultValue: state.currentProjectId ?? projects[0]?.id,
-  });
-  const exists = projects.some((project) => project.id === picked);
-  if (!exists) {
-    throw new Error(`Project not found in your account: ${picked}`);
+  const picked = await askSelect(
+    `Select project to ${action}`,
+    [
+      ...projects.map((project) => ({
+        value: project.id,
+        label: `${project.name} (${project.id})`,
+      })),
+      { value: "__skip__", label: "Skip" },
+    ],
+    (state.currentProjectId ?? projects[0]?.id) as string
+  );
+
+  if (picked === "__skip__") {
+    return undefined;
   }
 
   return picked;
@@ -351,6 +358,10 @@ async function main(): Promise<void> {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadProjectRuntime(global, options);
       const projectId = await pickProjectId(api, state, id, "update");
+      if (!projectId) {
+        printJson({ skipped: true });
+        return;
+      }
 
       const hasProjectChange = options.name !== undefined || options.description !== undefined;
       const updated = hasProjectChange
@@ -382,6 +393,10 @@ async function main(): Promise<void> {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadProjectRuntime(global, options);
       const projectId = await pickProjectId(api, state, id, "remove");
+      if (!projectId) {
+        printJson({ skipped: true });
+        return;
+      }
       await api.deleteProject(projectId);
       printJson({ removed: projectId });
     });
@@ -410,6 +425,10 @@ async function main(): Promise<void> {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadProjectRuntime(global, options);
       const projectId = await pickProjectId(api, state, id, "use");
+      if (!projectId) {
+        printJson({ skipped: true });
+        return;
+      }
       await updateState(
         (current) => ({
           ...current,

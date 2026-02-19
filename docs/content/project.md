@@ -13,6 +13,7 @@ All other `project` commands use account login flow (`grant_type=password`):
 
 - Interactive login (email/password prompt), or
 - Non-interactive flags: `--user <email> --password <password>`
+- Password input is hidden in interactive mode.
 
 You can persist account credentials with:
 
@@ -45,7 +46,7 @@ traduora project update [id] [--name <name>] [--description <text>] [--label <la
 ```
 
 Updates project fields and optionally ensures labels exist.
-If `id` is omitted, CLI will show projects and ask you to pick one.
+If `id` is omitted, CLI opens an interactive project picker (arrow keys + Enter), with `Skip` as the last option.
 
 ## `project remove`
 
@@ -54,7 +55,7 @@ traduora project remove [id]
 ```
 
 Deletes a project.
-If `id` is omitted, CLI will show projects and ask you to pick one.
+If `id` is omitted, CLI opens an interactive project picker (arrow keys + Enter), with `Skip` as the last option.
 
 ## `project status`
 
@@ -71,7 +72,7 @@ traduora project use [id]
 ```
 
 Sets default project ID in state file.
-If `id` is omitted, CLI will show projects and ask you to pick one.
+If `id` is omitted, CLI opens an interactive project picker (arrow keys + Enter), with `Skip` as the last option.
 
 ## Parameters and behavior
 

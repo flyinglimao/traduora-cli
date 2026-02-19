@@ -116,6 +116,9 @@ traduora project list --persistent
 
 This writes `.traduora.user.json` and auto-adds it to `.gitignore`.
 
+Interactive login does not echo password input.
+When project selection is required (for example `project use/update/remove` without ID), the CLI shows an arrow-key picker and includes `Skip` as the last option.
+
 ### Term
 
 ```bash

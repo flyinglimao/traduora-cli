@@ -33,19 +33,20 @@ The command validates them via token request, then writes config.
 You provide account email/password:
 
 1. CLI requests user token (`grant_type=password`).
-2. CLI asks which project to use.
+2. CLI asks which project to use (interactive project picker, arrow keys).
 3. CLI creates project client with role (`editor` by default).
 4. CLI validates generated client credentials.
 5. CLI writes config.
-6. CLI asks whether to set default project in state (can be skipped).
+6. CLI asks for default project in state via project picker (last option is `Skip`).
 
 ## Default project setup prompt
 
-After config is saved, `init` asks whether you want to set a default project.
+After config is saved, `init` asks for default project setup.
 
-- You can skip this step.
-- If you continue, the CLI asks for account login and lets you pick a project.
-- The selected project is written to state (`.traduora.state.json` by default).
+- Project selection is interactive (arrow keys + Enter).
+- The last option is `Skip`.
+- Password input is hidden in interactive login prompts.
+- If you select a project, it is written to state (`.traduora.state.json` by default).
 
 ## Parameters
 

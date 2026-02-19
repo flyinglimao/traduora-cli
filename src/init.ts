@@ -5,7 +5,7 @@ import { requestAccessToken } from "./auth.js";
 import { TraduoraApi } from "./api.js";
 import { TraduoraClient } from "./client.js";
 import { DEFAULT_WRITABLE_CONFIG_PATH, normalizeBaseUrl } from "./config.js";
-import { askChoice, askConfirm, askText } from "./prompts.js";
+import { askChoice, askSecret, askSelect, askText } from "./prompts.js";
 import { updateState } from "./state.js";
 import type { PersistedConfig, ProjectRole } from "./types.js";
 
@@ -59,7 +59,7 @@ async function initWithLogin(
   statePath?: string
 ): Promise<{ savedPath: string; projectId: string; defaultProjectId?: string }> {
   const username = await askText("Account email");
-  const password = await askText("Account password");
+  const password = await askSecret("Account password");
 
   const userToken = await requestAccessToken({
     baseUrl,
@@ -92,9 +92,14 @@ async function initWithLogin(
     console.log(`  ${project.id}  ${project.name}`);
   }
 
-  const projectId = await askText("Pick project id", {
-    defaultValue: projects[0]?.id,
-  });
+  const projectId = await askSelect(
+    "Select project for generated project client",
+    projects.map((project) => ({
+      value: project.id,
+      label: `${project.name} (${project.id})`,
+    })),
+    projects[0]?.id
+  );
 
   const clientName = await askText("Name for generated project client", {
     defaultValue: `traduora-cli-${os.hostname()}`,
@@ -125,16 +130,28 @@ async function initWithLogin(
 
   const savedPath = await writeConfigFile(configPath, config);
   let defaultProjectId: string | undefined;
-  const shouldSetDefault = await askConfirm("Set selected project as default for CLI state", true);
-  if (shouldSetDefault) {
+
+  const defaultProjectSelection = await askSelect(
+    "Select default project for CLI state",
+    [
+      ...projects.map((project) => ({
+        value: project.id,
+        label: `${project.name} (${project.id})`,
+      })),
+      { value: "__skip__", label: "Skip" },
+    ],
+    projectId
+  );
+
+  if (defaultProjectSelection !== "__skip__") {
     await updateState(
       (current) => ({
         ...current,
-        currentProjectId: projectId,
+        currentProjectId: defaultProjectSelection,
       }),
       statePath
     );
-    defaultProjectId = projectId;
+    defaultProjectId = defaultProjectSelection;
   }
 
   return {
@@ -144,9 +161,9 @@ async function initWithLogin(
   };
 }
 
-async function pickProjectViaAccountLogin(baseUrl: string): Promise<string> {
+async function pickProjectViaAccountLogin(baseUrl: string): Promise<string | undefined> {
   const username = await askText("Account email");
-  const password = await askText("Account password");
+  const password = await askSecret("Account password");
   const userToken = await requestAccessToken({
     baseUrl,
     auth: {
@@ -171,15 +188,23 @@ async function pickProjectViaAccountLogin(baseUrl: string): Promise<string> {
     console.log(`  ${project.id}  ${project.name}`);
   }
 
-  const projectId = await askText("Pick project id", {
-    defaultValue: projects[0]?.id,
-  });
-  const exists = projects.some((project) => project.id === projectId);
-  if (!exists) {
-    throw new Error(`Project not found in your account: ${projectId}`);
+  const projectSelection = await askSelect(
+    "Select default project for CLI state",
+    [
+      ...projects.map((project) => ({
+        value: project.id,
+        label: `${project.name} (${project.id})`,
+      })),
+      { value: "__skip__", label: "Skip" },
+    ],
+    projects[0]?.id
+  );
+
+  if (projectSelection === "__skip__") {
+    return undefined;
   }
 
-  return projectId;
+  return projectSelection;
 }
 
 export async function runInit(options: InitOptions): Promise<void> {
@@ -199,20 +224,29 @@ export async function runInit(options: InitOptions): Promise<void> {
   if (mode === "1") {
     const savedPath = await initWithCredentials(baseUrl, configPath);
     console.log(`Config saved: ${savedPath}`);
-    const shouldSetDefault = await askConfirm(
-      "Set default project now (requires account login)",
-      false
+    const shouldLoginForDefaultProject = await askChoice(
+      "Default project setup",
+      [
+        { key: "1", label: "Login and select default project" },
+        { key: "2", label: "Skip for now" },
+      ],
+      "2"
     );
-    if (shouldSetDefault) {
+
+    if (shouldLoginForDefaultProject === "1") {
       const projectId = await pickProjectViaAccountLogin(baseUrl);
-      await updateState(
-        (current) => ({
-          ...current,
-          currentProjectId: projectId,
-        }),
-        options.statePath
-      );
-      console.log(`Default project set: ${projectId}`);
+      if (projectId) {
+        await updateState(
+          (current) => ({
+            ...current,
+            currentProjectId: projectId,
+          }),
+          options.statePath
+        );
+        console.log(`Default project set: ${projectId}`);
+      } else {
+        console.log("Default project: skipped");
+      }
     }
     return;
   }
