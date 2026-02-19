@@ -10,7 +10,7 @@ slug: /
 
 ## What this tool is for
 
-- Create and manage Traduora projects from terminal scripts and CI pipelines.
+- Check Traduora project status from terminal scripts and CI pipelines.
 - Manage terms and translations by **term key** (`term.value`) instead of UUID.
 - Export locale files in multiple formats.
 - Integrate with Node.js automation through ESM and CommonJS SDK APIs.
@@ -27,7 +27,7 @@ Configuration is loaded in this order:
 
 ### 2) State file
 
-`project use` and `translation use` write defaults into `.traduora.state.json`.
+`init` and `translation use` write defaults into `.traduora.state.json`.
 
 - `currentProjectId`: default project for commands that need a project.
 - `currentLocale`: default locale for translation and export commands.
@@ -49,7 +49,7 @@ traduora init
 ### Step 2: Select default project and locale
 
 ```bash
-traduora project use <projectId>
+traduora project status
 traduora translation use en_GB
 ```
 

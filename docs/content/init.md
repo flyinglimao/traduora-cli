@@ -24,7 +24,7 @@ traduora init [--url <url>] [--role <admin|editor|viewer>] [--config <path>] [--
 You provide client credentials directly:
 
 - `clientId`
-- `clientSecret`
+- `clientSecret` (input is hidden)
 
 The command validates them via token request, then asks for `projectId`.
 

@@ -167,7 +167,7 @@ async function main() {
   const projectId = state.currentProjectId;
 
   console.log("[e2e] Running CLI commands...");
-  runNodeCli(["project", "status", projectId]);
+  runNodeCli(["project", "status"]);
 
   const termKey = `e2e.message.${stamp}`;
   runNodeCli(["term", "add", termKey, "--label", "smoke"]);

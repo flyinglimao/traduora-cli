@@ -2,7 +2,7 @@
 
 A modern CLI and JavaScript SDK for [Traduora](https://docs.traduora.co/) with first-class `client_credentials` support.
 
-- CLI commands for projects, terms, translations, and exports
+- CLI commands for project status, terms, translations, and exports
 - Interactive `init` flow to bootstrap credentials and default state
 - SDK package for scripting with both ESM and CommonJS
 - Docusaurus documentation with English, Traditional Chinese, Simplified Chinese, and Japanese
@@ -73,7 +73,7 @@ traduora export --help
 Typical flow:
 
 ```bash
-traduora project use <projectId>
+traduora project status
 traduora translation use en_GB
 traduora term add form.email.required
 traduora translation add --term form.email.required --value "E-mail input is required"
@@ -97,27 +97,11 @@ traduora init --help
 
 ```bash
 traduora project --help
-traduora project add --help
-traduora project list --help
-traduora project update --help
-traduora project remove --help
 traduora project status --help
-traduora project use --help
 ```
 
-`project` commands except `project status` now use account login flow.  
-You can provide credentials in flags (`--user`, `--password`) or run interactively.
-
-To persist account credentials for future `project` commands:
-
-```bash
-traduora project list --persistent
-```
-
-This writes `.traduora.user.json` and auto-adds it to `.gitignore`.
-
-Interactive login does not echo password input.
-When project selection is required (for example `project use/update/remove` without ID), the CLI shows an arrow-key picker and includes `Skip` as the last option.
+`project` only provides `status`.
+It always uses the current project from state/config.
 
 For term/translation/export commands, project is resolved from `currentProjectId` in state.
 
@@ -174,7 +158,7 @@ Supported environment variables:
 - `TRADUORA_PASSWORD`
 - `TRADUORA_ACCESS_TOKEN`
 
-State (`project use`, `translation use`) is stored in `.traduora.state.json`.
+State (`currentProjectId`, `currentLocale`) is stored in `.traduora.state.json`.
 
 ## JavaScript SDK
 

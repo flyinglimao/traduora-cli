@@ -7,13 +7,11 @@ import { requestAccessToken } from "./auth.js";
 import { TraduoraClient } from "./client.js";
 import { resolveConfig } from "./config.js";
 import { runInit } from "./init.js";
-import { askSelect, closePromptInterface } from "./prompts.js";
+import { closePromptInterface } from "./prompts.js";
 import { loadState, updateState } from "./state.js";
-import { createUserApi } from "./user-login.js";
 import type {
   CliState,
   ExportFormat,
-  ProjectDTO,
   ProjectRole,
   ProjectTermDTO,
   ResolvedConfig,
@@ -50,12 +48,6 @@ interface LocaleOption {
   locale?: string;
 }
 
-interface ProjectAuthOption {
-  user?: string;
-  password?: string;
-  persistent?: boolean;
-}
-
 function collect(value: string, previous: string[]): string[] {
   return [...previous, value];
 }
@@ -82,19 +74,10 @@ function printJson(payload: unknown): void {
   console.log(JSON.stringify(payload, null, 2));
 }
 
-function printProjects(projects: ProjectDTO[], currentProjectId?: string): void {
-  for (const project of projects) {
-    const active = currentProjectId === project.id ? "*" : " ";
-    console.log(
-      `${active} ${project.id}  ${project.name}  role=${project.role}  terms=${project.termsCount}  locales=${project.localesCount}`
-    );
-  }
-}
-
 function requireProjectId(state: CliState): string {
   const projectId = state.currentProjectId;
   if (!projectId) {
-    throw new Error("Project not set. Run: traduora project use");
+    throw new Error("Project not set. Run: traduora init");
   }
   return projectId;
 }
@@ -131,67 +114,6 @@ async function loadRuntime(global: GlobalOptions): Promise<{
   const client = new TraduoraClient(config);
   const api = new TraduoraApi(client);
   return { config, state, api };
-}
-
-async function loadProjectRuntime(
-  global: GlobalOptions,
-  auth: ProjectAuthOption
-): Promise<{
-  api: TraduoraApi;
-  state: CliState;
-}> {
-  const config = await resolveConfig({
-    configPath: global.config,
-    overrides: resolveOverrides(global),
-  });
-  const state = await loadState(global.state);
-  const api = await createUserApi({
-    baseUrl: config.baseUrl,
-    username: auth.user,
-    password: auth.password,
-    persistent: auth.persistent,
-  });
-
-  return { api, state };
-}
-
-async function pickProjectId(
-  api: TraduoraApi,
-  state: CliState,
-  explicitProjectId: string | undefined,
-  action: string
-): Promise<string | undefined> {
-  const projects = await api.listProjects();
-  if (projects.length === 0) {
-    throw new Error("No project found for this account.");
-  }
-
-  if (explicitProjectId) {
-    const exists = projects.some((project) => project.id === explicitProjectId);
-    if (!exists) {
-      throw new Error(`Project not found in your account: ${explicitProjectId}`);
-    }
-    return explicitProjectId;
-  }
-
-  const defaultProjectId = state.currentProjectId ?? projects[0]?.id;
-  const picked = await askSelect(
-    `Select project to ${action}`,
-    [
-      ...projects.map((project) => ({
-        value: project.id,
-        label: `${project.name} (${project.id})`,
-      })),
-      { value: "__skip__", label: "Skip" },
-    ],
-    defaultProjectId
-  );
-
-  if (picked === "__skip__") {
-    return undefined;
-  }
-
-  return picked;
 }
 
 async function findTermByValue(
@@ -299,141 +221,14 @@ async function main(): Promise<void> {
   const project = program.command("project").description("project operations");
 
   project
-    .command("add")
-    .argument("<name>", "project name")
-    .option("--description <description>", "project description")
-    .option("--user <email>", "account email for project login flow")
-    .option("--password <password>", "account password for project login flow")
-    .option(
-      "--persistent",
-      "persist account credentials to .traduora.user.json and add it to .gitignore"
-    )
-    .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
-    .action(async (name: string, options: { description?: string } & LabelOption & ProjectAuthOption) => {
-      const global = program.opts<GlobalOptions>();
-      const { api } = await loadProjectRuntime(global, options);
-      const created = await api.createProject({ name, description: options.description });
-      const labels = parseLabels(options.label);
-      if (labels.length > 0) {
-        await api.ensureLabels(created.id, labels);
-      }
-      printJson({ project: created, labelsCreatedOrEnsured: labels });
-    });
-
-  project
-    .command("list")
-    .option("--user <email>", "account email for project login flow")
-    .option("--password <password>", "account password for project login flow")
-    .option(
-      "--persistent",
-      "persist account credentials to .traduora.user.json and add it to .gitignore"
-    )
-    .action(async (options: ProjectAuthOption) => {
-      const global = program.opts<GlobalOptions>();
-      const { api, state } = await loadProjectRuntime(global, options);
-      const projects = await api.listProjects();
-      printProjects(projects, state.currentProjectId);
-    });
-
-  project
-    .command("update")
-    .argument("[id]", "project id (optional, choose interactively when omitted)")
-    .option("--name <name>", "new project name")
-    .option("--description <description>", "new project description")
-    .option("--user <email>", "account email for project login flow")
-    .option("--password <password>", "account password for project login flow")
-    .option(
-      "--persistent",
-      "persist account credentials to .traduora.user.json and add it to .gitignore"
-    )
-    .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
-    .action(
-      async (
-        id: string | undefined,
-        options: { name?: string; description?: string } & LabelOption & ProjectAuthOption
-      ) => {
-      const global = program.opts<GlobalOptions>();
-      const { api, state } = await loadProjectRuntime(global, options);
-      const projectId = await pickProjectId(api, state, id, "update");
-      if (!projectId) {
-        printJson({ skipped: true });
-        return;
-      }
-
-      const hasProjectChange = options.name !== undefined || options.description !== undefined;
-      const updated = hasProjectChange
-        ? await api.updateProject(projectId, {
-            name: options.name,
-            description: options.description,
-          })
-        : await api.getProject(projectId);
-
-      const labels = parseLabels(options.label);
-      if (labels.length > 0) {
-        await api.ensureLabels(projectId, labels);
-      }
-
-      printJson({ project: updated, labelsCreatedOrEnsured: labels });
-      }
-    );
-
-  project
-    .command("remove")
-    .argument("[id]", "project id (optional, choose interactively when omitted)")
-    .option("--user <email>", "account email for project login flow")
-    .option("--password <password>", "account password for project login flow")
-    .option(
-      "--persistent",
-      "persist account credentials to .traduora.user.json and add it to .gitignore"
-    )
-    .action(async (id: string | undefined, options: ProjectAuthOption) => {
-      const global = program.opts<GlobalOptions>();
-      const { api, state } = await loadProjectRuntime(global, options);
-      const projectId = await pickProjectId(api, state, id, "remove");
-      if (!projectId) {
-        printJson({ skipped: true });
-        return;
-      }
-      await api.deleteProject(projectId);
-      printJson({ removed: projectId });
-    });
-
-  project
     .command("status")
-    .argument("[id]", "project id (optional, defaults to current project)")
-    .action(async (id: string | undefined) => {
+    .description("show status for current project from state/config")
+    .action(async () => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
-      const projectId = id ?? requireProjectId(state);
+      const projectId = requireProjectId(state);
       const status = await api.getProjectStatus(projectId);
       printJson({ projectId, status });
-    });
-
-  project
-    .command("use")
-    .argument("[id]", "project id (optional, choose interactively when omitted)")
-    .option("--user <email>", "account email for project login flow")
-    .option("--password <password>", "account password for project login flow")
-    .option(
-      "--persistent",
-      "persist account credentials to .traduora.user.json and add it to .gitignore"
-    )
-    .action(async (id: string | undefined, options: ProjectAuthOption) => {
-      const global = program.opts<GlobalOptions>();
-      const { api, state } = await loadProjectRuntime(global, options);
-      const projectId = await pickProjectId(api, state, id, "use");
-      if (!projectId) {
-        printJson({ skipped: true });
-        return;
-      }
-      await updateState(
-        (current) => ({
-          ...current,
-          currentProjectId: projectId,
-        }),
-        global.state
-      );
-      printJson({ currentProjectId: projectId });
     });
 
   const term = program.command("term").description("term operations");
