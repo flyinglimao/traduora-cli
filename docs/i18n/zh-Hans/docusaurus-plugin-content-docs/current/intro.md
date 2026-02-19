@@ -6,39 +6,39 @@ slug: /
 
 # Traduora CLI Next
 
-`@0xlimao/traduora-cli` 是一个可用于真实开发流程的 Traduora CLI 与 JS SDK。
+`@0xlimao/traduora-cli` 是一个实用的 Traduora CLI 和 JS SDK，可直接用于日常开发流程。
 
-## 这个工具能解决什么
+## 这个工具的用途
 
-- 在终端、CI、脚本中管理 Traduora 项目。
-- 用 **term key**（`term.value`）操作，而不是记 UUID。
-- 导出多种翻译文件格式。
-- 用 ESM / CommonJS SDK 编写自动化脚本。
+- 在终端脚本和 CI pipeline 中检查 Traduora 项目状态。
+- 用 **term key**（`term.value`）管理 term 和 translation，而不是 UUID。
+- 以多种格式导出 locale 文件。
+- 通过 ESM 与 CommonJS SDK 接口集成 Node.js 自动化。
 
 ## 核心概念
 
 ### 1) 配置来源优先级
 
-配置加载顺序：
+配置按以下顺序加载：
 
 1. 环境变量
 2. 配置文件（`traduora.config.json` / `traduora.config.ts` / `traduora.config.js`）
-3. CLI 参数覆盖（例如 `--base-url`, `--token`）
+3. CLI 参数覆盖（`--base-url`、`--token` 等）
 
 ### 2) 状态文件
 
-`project use` 和 `translation use` 会写入 `.traduora.state.json`：
+`init` 和 `translation use` 会把默认值写入 `.traduora.state.json`。
 
-- `currentProjectId`：默认项目
-- `currentLocale`：默认语言
+- `currentProjectId`：需要 project 的命令使用的默认项目。
+- `currentLocale`：translation 与 export 命令使用的默认语言。
 
-### 3) term key 映射（重要）
+### 3) Term key 映射（重要）
 
-CLI 对外统一使用可读 key（例如 `form.email.required`）。
+你使用的是人类可读的 term key（例如 `form.email.required`）。
 
-内部会先查询 term 列表，将 key 映射到 `termId` 再调用 API。
+CLI 内部会自动调用 term API，把 key 解析为对应 UUID。
 
-## 快速流程
+## 快速开始
 
 ### 第一步：初始化认证
 
@@ -46,21 +46,21 @@ CLI 对外统一使用可读 key（例如 `form.email.required`）。
 traduora init
 ```
 
-### 第二步：设置默认项目与语言
+### 第二步：确认默认项目与语言
 
 ```bash
-traduora project use <projectId>
+traduora project status
 traduora translation use en_GB
 ```
 
-### 第三步：创建词条和翻译
+### 第三步：管理词条和翻译
 
 ```bash
 traduora term add form.email.required
 traduora translation add --term form.email.required --value "E-mail input is required"
 ```
 
-### 第四步：导出翻译文件
+### 第四步：导出翻译
 
 ```bash
 traduora export --format jsonnested --output ./i18n/en_GB.json

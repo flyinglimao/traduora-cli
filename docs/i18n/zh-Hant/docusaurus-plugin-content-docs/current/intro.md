@@ -6,39 +6,39 @@ slug: /
 
 # Traduora CLI Next
 
-`@0xlimao/traduora-cli` 是一個可實際落地在開發流程中的 Traduora CLI 與 JS SDK。
+`@0xlimao/traduora-cli` 是一個實用的 Traduora CLI 與 JS SDK，可直接用於日常開發流程。
 
-## 這個工具可以解決什麼
+## 這個工具的用途
 
-- 在終端機、CI、腳本中管理 Traduora 專案。
-- 以 **term key**（`term.value`）操作，不需要記 UUID。
-- 輸出多種語言檔格式。
-- 透過 ESM / CommonJS SDK 寫自動化腳本。
+- 在終端機腳本與 CI pipeline 中檢查 Traduora 專案狀態。
+- 以 **term key**（`term.value`）管理 term 與 translation，而不是 UUID。
+- 以多種格式輸出語系檔。
+- 透過 ESM 與 CommonJS SDK 介面整合 Node.js 自動化。
 
 ## 核心概念
 
 ### 1) 設定來源優先順序
 
-設定讀取順序為：
+設定依下列順序載入：
 
 1. 環境變數
 2. 設定檔（`traduora.config.json` / `traduora.config.ts` / `traduora.config.js`）
-3. CLI 參數覆寫（如 `--base-url`, `--token`）
+3. CLI 參數覆寫（`--base-url`、`--token` 等）
 
 ### 2) 狀態檔
 
-`project use` 與 `translation use` 會寫入 `.traduora.state.json`：
+`init` 與 `translation use` 會把預設值寫入 `.traduora.state.json`。
 
-- `currentProjectId`：預設專案
-- `currentLocale`：預設語系
+- `currentProjectId`：需要 project 的指令所使用的預設專案。
+- `currentLocale`：translation 與 export 指令使用的預設語系。
 
-### 3) term key 對映（重要）
+### 3) Term key 對映（重要）
 
-CLI 對外都用人類可讀的 key（例如 `form.email.required`）。
+你會使用人類可讀的 term key（例如 `form.email.required`）。
 
-內部會先查 term 清單，把 key 對映到 `termId` 後再呼叫 API。
+CLI 內部會自動呼叫 term API，把 key 解析成對應的 UUID。
 
-## 快速流程
+## 快速開始
 
 ### 第一步：初始化認證
 
@@ -46,21 +46,21 @@ CLI 對外都用人類可讀的 key（例如 `form.email.required`）。
 traduora init
 ```
 
-### 第二步：設定預設專案與語系
+### 第二步：確認預設專案與語系
 
 ```bash
-traduora project use <projectId>
+traduora project status
 traduora translation use en_GB
 ```
 
-### 第三步：建立詞條與翻譯
+### 第三步：管理詞條與翻譯
 
 ```bash
 traduora term add form.email.required
 traduora translation add --term form.email.required --value "E-mail input is required"
 ```
 
-### 第四步：輸出翻譯檔
+### 第四步：輸出翻譯
 
 ```bash
 traduora export --format jsonnested --output ./i18n/en_GB.json

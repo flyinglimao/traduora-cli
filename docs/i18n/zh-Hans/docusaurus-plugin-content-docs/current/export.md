@@ -3,21 +3,22 @@ id: export
 title: Export 命令
 ---
 
-`export` 用于下载指定项目与 locale 的翻译文件。
+`export` 用于下载指定项目和 locale 的翻译文件。
 
 ## 命令
 
 ```bash
-traduora export [--project <id>] [--locale <code>] [--format <format>] [--output <path>]
+traduora export [--locale <code>] [--format <format>] [--result-format <table|json>] [--output <path>]
 ```
 
 ## 参数
 
 | 参数 | 目的 | 默认 |
 |---|---|---|
-| `--project` | 指定项目 | 当前默认项目 |
-| `--locale` | 指定语言 | 当前默认语言 |
-| `--format` | 导出格式 | `jsonnested` |
+| project | 从 state 解析当前项目 | `currentProjectId` |
+| `--locale` | 目标语言 | 当前 locale |
+| `--format` | 导出文件格式 | `jsonnested` |
+| `--result-format` | CLI 结果输出格式 | `table` |
 | `--output` | 输出文件路径 | `<project>.<locale>.<format>` |
 
 ## 支持格式
@@ -37,5 +38,5 @@ traduora export [--project <id>] [--locale <code>] [--format <format>] [--output
 
 ```bash
 traduora export --format jsonnested --output ./i18n/en_GB.json
-traduora export --project <id> --locale ja --format jsonflat --output ./i18n/ja.json
+traduora export --locale ja --format jsonflat --output ./i18n/ja.json
 ```

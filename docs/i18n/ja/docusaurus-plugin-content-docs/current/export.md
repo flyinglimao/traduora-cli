@@ -8,16 +8,17 @@ title: Export コマンド
 ## コマンド
 
 ```bash
-traduora export [--project <id>] [--locale <code>] [--format <format>] [--output <path>]
+traduora export [--locale <code>] [--format <format>] [--result-format <table|json>] [--output <path>]
 ```
 
 ## オプション
 
 | オプション | 目的 | 既定値 |
 |---|---|---|
-| `--project` | 対象 project | 既定 project |
-| `--locale` | 対象 locale | 既定 locale |
-| `--format` | 出力フォーマット | `jsonnested` |
+| project | state から現在 project を解決 | `currentProjectId` |
+| `--locale` | 対象 locale | 現在 locale |
+| `--format` | エクスポートファイル形式 | `jsonnested` |
+| `--result-format` | CLI 結果の出力形式 | `table` |
 | `--output` | 出力ファイルパス | `<project>.<locale>.<format>` |
 
 ## 対応フォーマット
@@ -37,5 +38,5 @@ traduora export [--project <id>] [--locale <code>] [--format <format>] [--output
 
 ```bash
 traduora export --format jsonnested --output ./i18n/en_GB.json
-traduora export --project <id> --locale ja --format jsonflat --output ./i18n/ja.json
+traduora export --locale ja --format jsonflat --output ./i18n/ja.json
 ```

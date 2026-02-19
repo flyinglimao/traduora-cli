@@ -6,54 +6,54 @@ slug: /
 
 # Traduora CLI Next
 
-`@0xlimao/traduora-cli` は、実運用を前提にした Traduora 用 CLI と JS SDK です。
+`@0xlimao/traduora-cli` は、実運用に使える Traduora CLI と JS SDK です。
 
-## このツールでできること
+## このツールの用途
 
-- ターミナル、CI、スクリプトで Traduora プロジェクトを管理する。
-- UUID ではなく **term key**（`term.value`）で翻訳を操作する。
-- 複数フォーマットで翻訳ファイルをエクスポートする。
-- ESM / CommonJS SDK で Node.js 自動化を構築する。
+- ターミナルスクリプトや CI パイプラインで Traduora project 状態を確認する。
+- UUID ではなく **term key**（`term.value`）で term と translation を管理する。
+- locale ファイルを複数形式でエクスポートする。
+- ESM / CommonJS SDK API を使って Node.js 自動化に統合する。
 
 ## 主要コンセプト
 
-### 1) 設定の優先順位
+### 1) 設定ソースの優先順位
 
-設定は以下の順で適用されます。
+設定は次の順で読み込まれます。
 
 1. 環境変数
 2. 設定ファイル（`traduora.config.json` / `traduora.config.ts` / `traduora.config.js`）
-3. CLI オプション上書き（`--base-url`, `--token` など）
+3. CLI オーバーライド（`--base-url`、`--token` など）
 
 ### 2) 状態ファイル
 
-`project use` と `translation use` は `.traduora.state.json` に保存されます。
+`init` と `translation use` は既定値を `.traduora.state.json` に保存します。
 
-- `currentProjectId`: 既定プロジェクト
-- `currentLocale`: 既定ロケール
+- `currentProjectId`：project が必要なコマンドで使う既定 project。
+- `currentLocale`：translation / export コマンドで使う既定 locale。
 
-### 3) term key マッピング（重要）
+### 3) Term key マッピング（重要）
 
-CLI は人が読める key（例: `form.email.required`）で操作します。
+利用者は人間可読な term key（例: `form.email.required`）を使います。
 
-内部では term 一覧から key を `termId` に変換して API を呼び出します。
+CLI は内部で term API を呼び出し、key を UUID に解決します。
 
 ## クイックスタート
 
-### Step 1: 認証初期化
+### Step 1: 認証を初期化
 
 ```bash
 traduora init
 ```
 
-### Step 2: 既定のプロジェクトとロケールを設定
+### Step 2: 既定 project / locale を確認・設定
 
 ```bash
-traduora project use <projectId>
+traduora project status
 traduora translation use en_GB
 ```
 
-### Step 3: 用語と翻訳を追加
+### Step 3: term と translation を管理
 
 ```bash
 traduora term add form.email.required

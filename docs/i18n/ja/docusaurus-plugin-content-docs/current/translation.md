@@ -3,55 +3,57 @@ id: translation
 title: Translation コマンド
 ---
 
-Translation コマンドは locale 単位で term key の翻訳を操作します。
+Translation コマンドは 1 つの locale と 1 つの term key を対象に翻訳を操作します。
 
 ## `translation use`
 
 ```bash
-traduora translation use <locale_code>
+traduora translation use <locale_code> [--format <table|json>]
 ```
 
-既定 locale を状態ファイルに保存します。
+既定 locale を state ファイルに保存します。
 
 ## `translation add`
 
 ```bash
-traduora translation add --term <key> --value <text> [--project <id>] [--locale <code>] [--label <label[,label...]>]
+traduora translation add --term <key> --value <text> [--locale <code>] [--label <label[,label...]>] [--format <table|json>]
 ```
 
-指定 term + locale の翻訳値を追加（または上書き）します。
+指定した term + locale の翻訳値を追加（または上書き）します。
 
 ## `translation list`
 
 ```bash
-traduora translation list [--project <id>] [--locale <code>]
+traduora translation list [--locale <code>] [--format <table|json>]
 ```
 
-翻訳一覧を表示し、termId を term key に戻して出力します。
+翻訳一覧を表示し、term ID を term key に解決して表示します。
+既定出力は `table` です。自動化スクリプトでは `--format json` を使ってください。
 
 ## `translation update`
 
 ```bash
-traduora translation update --term <key> --value <text> [--project <id>] [--locale <code>] [--label <label[,label...]>]
+traduora translation update --term <key> --value <text> [--locale <code>] [--label <label[,label...]>] [--format <table|json>]
 ```
 
-翻訳値と任意の label を更新します。
+翻訳値と任意の labels を更新します。
 
 ## `translation delete`
 
 ```bash
-traduora translation delete --term <key> [--project <id>] [--locale <code>]
+traduora translation delete --term <key> [--locale <code>] [--format <table|json>]
 ```
 
 対象 locale の翻訳値をクリアします。
 
 ## パラメータと挙動
 
-- `--project`：既定 project があれば省略可。
-- `--locale`：既定 locale があれば省略可。
-- `--term`：必須。可読 key を指定。
-- `--value`：add/update で必須。
-- `--label`：翻訳 label。存在しない label は自動作成。
+- project は常に state（`currentProjectId`）から解決されます。
+- `--locale`：既定 locale が設定済みなら省略可能。
+- `--term`：必須。可読な term key を指定します。
+- `--value`：`add` / `update` で必須です。
+- `--label`：翻訳 labels。存在しない label は自動作成されます。
+- `--format`：既定は `table`、`json` は機械可読出力向けです。
 
 ## 例
 

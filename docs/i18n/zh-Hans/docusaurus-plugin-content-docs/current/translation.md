@@ -3,36 +3,37 @@ id: translation
 title: Translation 命令
 ---
 
-Translation 命令在指定 locale 下，针对指定 term key 管理翻译文本。
+Translation 命令在单一 locale 下，对单一 term key 操作翻译内容。
 
 ## `translation use`
 
 ```bash
-traduora translation use <locale_code>
+traduora translation use <locale_code> [--format <table|json>]
 ```
 
-把默认 locale 写入状态文件。
+把默认 locale 写入 state 文件。
 
 ## `translation add`
 
 ```bash
-traduora translation add --term <key> --value <text> [--project <id>] [--locale <code>] [--label <label[,label...]>]
+traduora translation add --term <key> --value <text> [--locale <code>] [--label <label[,label...]>] [--format <table|json>]
 ```
 
-为该 term + locale 新增或覆盖翻译值。
+为指定 term + locale 新增或覆盖翻译值。
 
 ## `translation list`
 
 ```bash
-traduora translation list [--project <id>] [--locale <code>]
+traduora translation list [--locale <code>] [--format <table|json>]
 ```
 
-列出翻译，并将 termId 还原显示为 term key。
+列出翻译内容，并把 term ID 解析回 term key。
+默认输出为 `table`；自动化脚本可使用 `--format json`。
 
 ## `translation update`
 
 ```bash
-traduora translation update --term <key> --value <text> [--project <id>] [--locale <code>] [--label <label[,label...]>]
+traduora translation update --term <key> --value <text> [--locale <code>] [--label <label[,label...]>] [--format <table|json>]
 ```
 
 更新翻译值和可选 labels。
@@ -40,18 +41,19 @@ traduora translation update --term <key> --value <text> [--project <id>] [--loca
 ## `translation delete`
 
 ```bash
-traduora translation delete --term <key> [--project <id>] [--locale <code>]
+traduora translation delete --term <key> [--locale <code>] [--format <table|json>]
 ```
 
-清空该 term 在目标 locale 的翻译值。
+清空该 term 在目标 locale 下的翻译值。
 
 ## 参数与行为
 
-- `--project`：若有默认 project 可省略。
-- `--locale`：若有默认 locale 可省略。
-- `--term`：必填，使用可读 key。
-- `--value`：add/update 必填。
-- `--label`：翻译 labels，不存在会自动创建。
+- 项目始终从 state（`currentProjectId`）解析。
+- `--locale`：若已设置默认 locale 可省略。
+- `--term`：必填，使用可读的 term key。
+- `--value`：`add` / `update` 必填。
+- `--label`：翻译 labels；不存在会自动创建。
+- `--format`：默认 `table`，`json` 用于机器可读输出。
 
 ## 示例
 

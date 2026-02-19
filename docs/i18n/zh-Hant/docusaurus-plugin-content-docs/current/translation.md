@@ -3,55 +3,57 @@ id: translation
 title: Translation 指令
 ---
 
-Translation 指令會在指定語系下，對指定 term key 操作翻譯內容。
+Translation 指令會在單一語系下，針對單一 term key 操作翻譯內容。
 
 ## `translation use`
 
 ```bash
-traduora translation use <locale_code>
+traduora translation use <locale_code> [--format <table|json>]
 ```
 
-把預設語系寫入 state。
+把預設語系寫入 state 檔。
 
 ## `translation add`
 
 ```bash
-traduora translation add --term <key> --value <text> [--project <id>] [--locale <code>] [--label <label[,label...]>]
+traduora translation add --term <key> --value <text> [--locale <code>] [--label <label[,label...]>] [--format <table|json>]
 ```
 
-對該 term + locale 新增或覆蓋翻譯值。
+對指定 term + locale 新增或覆蓋翻譯值。
 
 ## `translation list`
 
 ```bash
-traduora translation list [--project <id>] [--locale <code>]
+traduora translation list [--locale <code>] [--format <table|json>]
 ```
 
-列出翻譯內容，並把 termId 轉回 term key 顯示。
+列出翻譯內容，並把 term ID 解析回 term key。
+預設輸出為 `table`；自動化腳本可使用 `--format json`。
 
 ## `translation update`
 
 ```bash
-traduora translation update --term <key> --value <text> [--project <id>] [--locale <code>] [--label <label[,label...]>]
+traduora translation update --term <key> --value <text> [--locale <code>] [--label <label[,label...]>] [--format <table|json>]
 ```
 
-更新翻譯內容與可選 labels。
+更新翻譯值與可選 labels。
 
 ## `translation delete`
 
 ```bash
-traduora translation delete --term <key> [--project <id>] [--locale <code>]
+traduora translation delete --term <key> [--locale <code>] [--format <table|json>]
 ```
 
-清空該 term 在指定 locale 的翻譯值。
+清空該 term 在目標 locale 的翻譯值。
 
 ## 參數與行為
 
-- `--project`：可省略（若有預設 project）。
-- `--locale`：可省略（若有預設 locale）。
-- `--term`：必要，使用人類可讀 key。
-- `--value`：add/update 必填。
-- `--label`：翻譯 label；不存在會自動建立。
+- 專案一律由 state（`currentProjectId`）解析。
+- `--locale`：若已設定預設 locale 可省略。
+- `--term`：必填，使用可讀的 term key。
+- `--value`：`add` / `update` 必填。
+- `--label`：翻譯 labels；不存在的 label 會自動建立。
+- `--format`：預設 `table`，`json` 則提供機器可讀輸出。
 
 ## 範例
 
