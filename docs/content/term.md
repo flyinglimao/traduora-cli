@@ -8,7 +8,7 @@ Term commands use **term key** (`term.value`) as the public identifier.
 ## `term add`
 
 ```bash
-traduora term add <value> [--label <label[,label...]>]
+traduora term add <value> [--label <label[,label...]>] [--format <table|json>]
 ```
 
 Creates a term key in the current project.
@@ -26,7 +26,7 @@ Use `--format json` for scripts.
 ## `term update`
 
 ```bash
-traduora term update <value> --new-value <value> [--label <label[,label...]>]
+traduora term update <value> --new-value <value> [--label <label[,label...]>] [--format <table|json>]
 ```
 
 Finds term by current key, then updates key value.
@@ -34,7 +34,7 @@ Finds term by current key, then updates key value.
 ## `term delete`
 
 ```bash
-traduora term delete <value>
+traduora term delete <value> [--format <table|json>]
 ```
 
 Finds term by key and deletes it.
@@ -43,6 +43,7 @@ Finds term by key and deletes it.
 
 - Project is always resolved from current state (`currentProjectId`).
 - `--label` updates labels attached to the term.
+- `--format`: `table` by default, `json` for machine-readable output.
 - Internally, CLI maps `value -> termId` before calling term APIs.
 
 ## Example

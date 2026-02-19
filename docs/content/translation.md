@@ -8,7 +8,7 @@ Translation commands operate on one locale and one term key at a time.
 ## `translation use`
 
 ```bash
-traduora translation use <locale_code>
+traduora translation use <locale_code> [--format <table|json>]
 ```
 
 Stores default locale in state file.
@@ -16,7 +16,7 @@ Stores default locale in state file.
 ## `translation add`
 
 ```bash
-traduora translation add --term <key> --value <text> [--locale <code>] [--label <label[,label...]>]
+traduora translation add --term <key> --value <text> [--locale <code>] [--label <label[,label...]>] [--format <table|json>]
 ```
 
 Upserts translation value for given term and locale.
@@ -33,7 +33,7 @@ Default output is `table`; use `--format json` for automation scripts.
 ## `translation update`
 
 ```bash
-traduora translation update --term <key> --value <text> [--locale <code>] [--label <label[,label...]>]
+traduora translation update --term <key> --value <text> [--locale <code>] [--label <label[,label...]>] [--format <table|json>]
 ```
 
 Updates translation value and optional labels.
@@ -41,7 +41,7 @@ Updates translation value and optional labels.
 ## `translation delete`
 
 ```bash
-traduora translation delete --term <key> [--locale <code>]
+traduora translation delete --term <key> [--locale <code>] [--format <table|json>]
 ```
 
 Clears translation value for the term in that locale.
@@ -53,6 +53,7 @@ Clears translation value for the term in that locale.
 - `--term`: required, uses human-readable key.
 - `--value`: required for add/update.
 - `--label`: translation labels; missing labels are auto-created.
+- `--format`: `table` by default, `json` for machine-readable output.
 
 ## Example
 

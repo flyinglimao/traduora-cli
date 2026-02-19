@@ -180,6 +180,13 @@ function labelsAsCsv(labels: string[]): string {
   return labels.join(", ");
 }
 
+function outputFormatOption(
+  flag = "--format <format>",
+  description = `output format (one of: ${OUTPUT_FORMATS.join(", ")})`
+): Option {
+  return new Option(flag, description).choices(OUTPUT_FORMATS).default("table");
+}
+
 async function main(): Promise<void> {
   const program = new Command();
 
@@ -235,18 +242,40 @@ async function main(): Promise<void> {
   program
     .command("token")
     .description("request access token")
-    .action(async () => {
+    .addOption(outputFormatOption())
+    .action(async (options: FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const config = await resolveConfig({
         configPath: global.config,
         overrides: resolveOverrides(global),
       });
       const token = await requestAccessToken(config);
-      printJson({
+      const payload = {
         access_token: token.accessToken,
         expires_at: new Date(token.expiresAtEpochMs).toISOString(),
         token_type: token.tokenType,
-      });
+      };
+
+      const format = resolveOutputFormat(options.format, "table");
+      if (format === "json") {
+        printJson(payload);
+        return;
+      }
+
+      printTable(
+        [
+          {
+            token_type: payload.token_type,
+            expires_at: payload.expires_at,
+            access_token: payload.access_token,
+          },
+        ],
+        [
+          { key: "token_type", header: "token_type" },
+          { key: "expires_at", header: "expires_at" },
+          { key: "access_token", header: "access_token" },
+        ]
+      );
     });
 
   const project = program.command("project").description("project operations");
@@ -254,11 +283,7 @@ async function main(): Promise<void> {
   project
     .command("status")
     .description("show status for current project from state/config")
-    .addOption(
-      new Option("--format <format>", `output format (one of: ${OUTPUT_FORMATS.join(", ")})`)
-        .choices(OUTPUT_FORMATS)
-        .default("table")
-    )
+    .addOption(outputFormatOption())
     .action(async (options: FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
@@ -273,7 +298,6 @@ async function main(): Promise<void> {
 
       const stats = status.projectStats;
       const rows: Array<{ metric: string; value: string | number }> = [
-        { metric: "projectId", value: projectId },
         { metric: "progress", value: stats.progress },
         { metric: "translated", value: stats.translated },
         { metric: "total", value: stats.total },
@@ -293,7 +317,8 @@ async function main(): Promise<void> {
     .command("add")
     .argument("<value>", "term key")
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
-    .action(async (value: string, options: LabelOption) => {
+    .addOption(outputFormatOption())
+    .action(async (value: string, options: LabelOption & FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
       const projectId = requireProjectId(state);
@@ -304,16 +329,32 @@ async function main(): Promise<void> {
         await api.setTermLabels(projectId, created.id, created.labels, labels);
       }
 
-      printJson({ projectId, term: created, labelsApplied: labels });
+      const payload = { projectId, term: created, labelsApplied: labels };
+      const format = resolveOutputFormat(options.format, "table");
+      if (format === "json") {
+        printJson(payload);
+        return;
+      }
+
+      printTable(
+        [
+          {
+            value: created.value,
+            context: extractTermContext(created),
+            label: labelsAsCsv(labels.length > 0 ? labels : created.labels),
+          },
+        ],
+        [
+          { key: "value", header: "value" },
+          { key: "context", header: "context" },
+          { key: "label", header: "label" },
+        ]
+      );
     });
 
   term
     .command("list")
-    .addOption(
-      new Option("--format <format>", `output format (one of: ${OUTPUT_FORMATS.join(", ")})`)
-        .choices(OUTPUT_FORMATS)
-        .default("table")
-    )
+    .addOption(outputFormatOption())
     .action(async (options: FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
@@ -344,7 +385,8 @@ async function main(): Promise<void> {
     .argument("<value>", "current term key")
     .requiredOption("--new-value <value>", "new term key")
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
-    .action(async (value: string, options: { newValue: string } & LabelOption) => {
+    .addOption(outputFormatOption())
+    .action(async (value: string, options: { newValue: string } & LabelOption & FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
       const projectId = requireProjectId(state);
@@ -357,13 +399,34 @@ async function main(): Promise<void> {
         await api.setTermLabels(projectId, updated.id, updated.labels, labels);
       }
 
-      printJson({ projectId, term: updated, labelsApplied: labels });
+      const payload = { projectId, term: updated, labelsApplied: labels };
+      const format = resolveOutputFormat(options.format, "table");
+      if (format === "json") {
+        printJson(payload);
+        return;
+      }
+
+      printTable(
+        [
+          {
+            value: updated.value,
+            context: extractTermContext(updated),
+            label: labelsAsCsv(labels.length > 0 ? labels : updated.labels),
+          },
+        ],
+        [
+          { key: "value", header: "value" },
+          { key: "context", header: "context" },
+          { key: "label", header: "label" },
+        ]
+      );
     });
 
   term
     .command("delete")
     .argument("<value>", "term key")
-    .action(async (value: string) => {
+    .addOption(outputFormatOption())
+    .action(async (value: string, options: FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
       const projectId = requireProjectId(state);
@@ -371,7 +434,14 @@ async function main(): Promise<void> {
       const found = await findTermByValue(api, projectId, value);
       await api.deleteTerm(projectId, found.id);
 
-      printJson({ projectId, removed: value });
+      const payload = { projectId, removed: value };
+      const format = resolveOutputFormat(options.format, "table");
+      if (format === "json") {
+        printJson(payload);
+        return;
+      }
+
+      printTable([{ removed: value }], [{ key: "removed", header: "removed" }]);
     });
 
   const translation = program
@@ -382,7 +452,8 @@ async function main(): Promise<void> {
   translation
     .command("use")
     .argument("<locale_code>", "locale code, e.g. en_GB")
-    .action(async (localeCode: string) => {
+    .addOption(outputFormatOption())
+    .action(async (localeCode: string, options: FormatOption) => {
       const global = program.opts<GlobalOptions>();
       await updateState(
         (current) => ({
@@ -391,17 +462,21 @@ async function main(): Promise<void> {
         }),
         global.state
       );
-      printJson({ currentLocale: localeCode });
+
+      const payload = { currentLocale: localeCode };
+      const format = resolveOutputFormat(options.format, "table");
+      if (format === "json") {
+        printJson(payload);
+        return;
+      }
+
+      printTable([{ locale: localeCode }], [{ key: "locale", header: "locale" }]);
     });
 
   translation
     .command("list")
     .option("--locale <code>", "locale code")
-    .addOption(
-      new Option("--format <format>", `output format (one of: ${OUTPUT_FORMATS.join(", ")})`)
-        .choices(OUTPUT_FORMATS)
-        .default("table")
-    )
+    .addOption(outputFormatOption())
     .action(async (options: LocaleOption & FormatOption) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
@@ -412,14 +487,14 @@ async function main(): Promise<void> {
         api.listTranslations(projectId, locale),
         api.listTerms(projectId),
       ]);
-      const rows = buildTranslationRows(translations, terms);
       const format = resolveOutputFormat(options.format, "table");
 
       if (format === "json") {
-        printJson({ projectId, locale, translations: rows });
+        printJson({ projectId, locale, translations, terms });
         return;
       }
 
+      const rows = buildTranslationRows(translations, terms);
       const tableRows = rows.map((row) => ({
         term: row.term,
         value: row.value,
@@ -440,6 +515,7 @@ async function main(): Promise<void> {
       value: string;
       locale?: string;
       label?: string[];
+      format?: string;
     }
   ): Promise<void> => {
     const global = program.opts<GlobalOptions>();
@@ -457,16 +533,42 @@ async function main(): Promise<void> {
       await api.setTranslationLabels(projectId, locale, found.id, updated.labels, labels);
     }
 
-    printJson({
+    const payload = {
       mode,
       projectId,
       locale,
       translation: {
+        termId: found.id,
         term: options.term,
         value: updated.value,
         labels: labels.length > 0 ? labels : updated.labels,
       },
-    });
+    };
+
+    const format = resolveOutputFormat(options.format, "table");
+    if (format === "json") {
+      printJson(payload);
+      return;
+    }
+
+    printTable(
+      [
+        {
+          mode,
+          locale,
+          term: options.term,
+          value: updated.value,
+          label: labelsAsCsv(labels.length > 0 ? labels : updated.labels),
+        },
+      ],
+      [
+        { key: "mode", header: "mode" },
+        { key: "locale", header: "locale" },
+        { key: "term", header: "term" },
+        { key: "value", header: "value" },
+        { key: "label", header: "label" },
+      ]
+    );
   };
 
   translation
@@ -475,11 +577,13 @@ async function main(): Promise<void> {
     .requiredOption("--value <text>", "translation value")
     .option("--locale <code>", "locale code")
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
+    .addOption(outputFormatOption())
     .action(async (options: {
       term: string;
       value: string;
       locale?: string;
       label?: string[];
+      format?: string;
     }) => {
       await upsertTranslation("add", options);
     });
@@ -490,11 +594,13 @@ async function main(): Promise<void> {
     .requiredOption("--value <text>", "translation value")
     .option("--locale <code>", "locale code")
     .option("--label <label>", "label (repeatable or comma-separated)", collect, [])
+    .addOption(outputFormatOption())
     .action(async (options: {
       term: string;
       value: string;
       locale?: string;
       label?: string[];
+      format?: string;
     }) => {
       await upsertTranslation("update", options);
     });
@@ -503,7 +609,8 @@ async function main(): Promise<void> {
     .command("delete")
     .requiredOption("--term <value>", "term key")
     .option("--locale <code>", "locale code")
-    .action(async (options: { term: string; locale?: string }) => {
+    .addOption(outputFormatOption())
+    .action(async (options: { term: string; locale?: string; format?: string }) => {
       const global = program.opts<GlobalOptions>();
       const { api, state } = await loadRuntime(global);
       const projectId = requireProjectId(state);
@@ -512,11 +619,25 @@ async function main(): Promise<void> {
       const found = await findTermByValue(api, projectId, options.term);
       await api.updateTranslation(projectId, locale, found.id, "");
 
-      printJson({
+      const payload = {
         projectId,
         locale,
+        termId: found.id,
         removedTerm: options.term,
-      });
+      };
+      const format = resolveOutputFormat(options.format, "table");
+      if (format === "json") {
+        printJson(payload);
+        return;
+      }
+
+      printTable(
+        [{ locale, term: options.term }],
+        [
+          { key: "locale", header: "locale" },
+          { key: "term", header: "term" },
+        ]
+      );
     });
 
   program
@@ -531,6 +652,7 @@ async function main(): Promise<void> {
         .choices(EXPORT_FORMATS)
         .default("jsonnested")
     )
+    .addOption(outputFormatOption("--result-format <format>", "result output format (table or json)"))
     .option("--output <path>", "output file path")
     .addHelpText(
       "after",
@@ -541,6 +663,7 @@ async function main(): Promise<void> {
     .action(async (options: {
       locale?: string;
       format: string;
+      resultFormat?: string;
       output?: string;
     }) => {
       const global = program.opts<GlobalOptions>();
@@ -559,7 +682,29 @@ async function main(): Promise<void> {
       );
       await writeFile(outputPath, data);
 
-      printJson({ projectId, locale, format, output: outputPath, bytes: data.byteLength });
+      const payload = { projectId, locale, format, output: outputPath, bytes: data.byteLength };
+      const resultFormat = resolveOutputFormat(options.resultFormat, "table");
+      if (resultFormat === "json") {
+        printJson(payload);
+        return;
+      }
+
+      printTable(
+        [
+          {
+            locale,
+            export_format: format,
+            output: outputPath,
+            bytes: data.byteLength,
+          },
+        ],
+        [
+          { key: "locale", header: "locale" },
+          { key: "export_format", header: "export_format" },
+          { key: "output", header: "output" },
+          { key: "bytes", header: "bytes" },
+        ]
+      );
     });
 
   try {

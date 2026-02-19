@@ -8,7 +8,7 @@ title: Export Command
 ## Command
 
 ```bash
-traduora export [--locale <code>] [--format <format>] [--output <path>]
+traduora export [--locale <code>] [--format <format>] [--result-format <table|json>] [--output <path>]
 ```
 
 ## Options
@@ -18,6 +18,7 @@ traduora export [--locale <code>] [--format <format>] [--output <path>]
 | project | current project from state | `currentProjectId` |
 | `--locale` | target locale | current locale |
 | `--format` | output format | `jsonnested` |
+| `--result-format` | CLI result output format | `table` |
 | `--output` | output file path | `<project>.<locale>.<format>` |
 
 ## Supported formats

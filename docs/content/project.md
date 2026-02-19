@@ -13,6 +13,7 @@ traduora project status [--format <table|json>]
 
 Returns project stats for the current project.
 Default output is `table`; use `--format json` for machine-readable output.
+Table view shows only actionable stats (`progress`, `translated`, `total`, `terms`, `locales`).
 
 ## Behavior
 
