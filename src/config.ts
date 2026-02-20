@@ -97,16 +97,16 @@ function fromEnv(env: NodeJS.ProcessEnv): Partial<ResolvedConfig> {
   const grantType = explicitGrantType ?? implicitGrantType ?? "client_credentials";
   const auth: AuthConfig | undefined =
     env.TRADUORA_CLIENT_ID ||
-    env.TRADUORA_CLIENT_SECRET ||
-    env.TRADUORA_USERNAME ||
-    env.TRADUORA_PASSWORD
+      env.TRADUORA_CLIENT_SECRET ||
+      env.TRADUORA_USERNAME ||
+      env.TRADUORA_PASSWORD
       ? {
-          grantType: grantType ?? "client_credentials",
-          clientId: env.TRADUORA_CLIENT_ID,
-          clientSecret: env.TRADUORA_CLIENT_SECRET,
-          username: env.TRADUORA_USERNAME,
-          password: env.TRADUORA_PASSWORD,
-        }
+        grantType: grantType ?? "client_credentials",
+        clientId: env.TRADUORA_CLIENT_ID,
+        clientSecret: env.TRADUORA_CLIENT_SECRET,
+        username: env.TRADUORA_USERNAME,
+        password: env.TRADUORA_PASSWORD,
+      }
       : undefined;
 
   return {
@@ -123,10 +123,10 @@ function mergeConfig(
   const mergedAuth =
     base.auth || override.auth
       ? {
-          grantType: "client_credentials" as const,
-          ...(base.auth ?? {}),
-          ...(override.auth ?? {}),
-        }
+        grantType: "client_credentials" as const,
+        ...(base.auth ?? {}),
+        ...(override.auth ?? {}),
+      }
       : undefined;
 
   return {
@@ -209,7 +209,7 @@ function ensureValidConfig(config: ResolvedConfig): void {
 }
 
 export async function resolveConfig(options: ResolveConfigOptions = {}): Promise<ResolvedConfig> {
-  loadDotenv();
+  loadDotenv({ quiet: true });
 
   const cwd = options.cwd ?? process.cwd();
   const discoveredPath = options.configPath
